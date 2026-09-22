@@ -1,0 +1,10 @@
+includes:
+    - vendor/larastan/larastan/extension.neon
+
+parameters:
+    paths:
+        - app/
+        - bootstrap/app.php
+
+    # Level 6 is required for Phase 0
+    level: 6
