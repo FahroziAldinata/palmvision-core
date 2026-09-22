@@ -67,6 +67,11 @@ jobs:
       - name: Run Larastan (Static Analysis Level 6)
         run: ./vendor/bin/phpstan analyse
 
+      - name: Install NPM Dependencies & Build Assets
+        run: |
+          npm ci
+          npm run build
+
       - name: Run Database Migrations
         env:
           DB_CONNECTION: pgsql
@@ -88,8 +93,3 @@ jobs:
           REDIS_HOST: 127.0.0.1
           REDIS_PORT: 6379
         run: php artisan test --exclude-group=external
-
-      - name: Install NPM Dependencies & Build Assets
-        run: |
-          npm ci
-          npm run build

@@ -33,7 +33,7 @@ class HealthCheckController extends Controller
 
         $statusCode = 200;
 
-        // 1. Check Database & PostGIS
+        // 1. Check Database & PostGIS (Critical)
         try {
             /** @var array<int, object{ver: string}> $postgis */
             $postgis = DB::select('SELECT PostGIS_Version() as ver');
@@ -46,7 +46,7 @@ class HealthCheckController extends Controller
             $statusCode = 503;
         }
 
-        // 2. Check Redis
+        // 2. Check Redis (Critical)
         try {
             $redisPong = Redis::ping();
             if ($redisPong) {
@@ -59,25 +59,21 @@ class HealthCheckController extends Controller
             $statusCode = 503;
         }
 
-        // 3. Check Forecasting Service Reachability
+        // 3. Check Forecasting Service Reachability (Auxiliary Service)
         try {
             $forecastingUrl = (string) config('services.forecasting.url', 'http://forecasting:8000');
-            $response = Http::timeout(3)->get($forecastingUrl.'/health');
+            $response = Http::timeout(2)->get($forecastingUrl.'/health');
 
             if ($response->successful()) {
                 $checks['forecasting']['status'] = 'reachable';
                 $checks['forecasting']['response'] = $response->json();
             } else {
-                $checks['forecasting']['status'] = 'error';
+                $checks['forecasting']['status'] = 'unreachable';
                 $checks['forecasting']['http_status'] = $response->status();
-                $checks['status'] = 'degraded';
-                $statusCode = 503;
             }
-        } catch (Throwable $e) {
+        } catch (Throwable) {
             $checks['forecasting']['status'] = 'unreachable';
-            $checks['forecasting']['error'] = $e->getMessage();
-            $checks['status'] = 'degraded';
-            $statusCode = 503;
+            $checks['forecasting']['message'] = 'Forecasting service is currently unreachable';
         }
 
         return response()->json($checks, $statusCode);
