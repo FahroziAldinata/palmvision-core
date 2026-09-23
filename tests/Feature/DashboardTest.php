@@ -44,6 +44,9 @@ test('manajer kebun dashboard renders kebun-scoped afdelings and polygons', func
             ->has('afdelings', 2)
             ->where('summary.total_afdeling', 2)
             ->where('summary.total_blok', 10)
+            ->where('summary.total_produksi_kg', 0)
+            ->where('summary.total_taksasi_kg', 0)
+            ->where('summary.menunggu_validasi', 0)
             ->has('geoJson.features', 10)
         );
 });
@@ -60,6 +63,9 @@ test('asisten afdeling dashboard renders afdeling-scoped bloks and polygons', fu
             ->where('afdeling.kode', 'AFD-A')
             ->has('bloks', 5)
             ->where('summary.total_blok', 5)
+            ->where('summary.total_produksi_kg', 0)
+            ->where('summary.total_taksasi_kg', 0)
+            ->where('summary.menunggu_validasi', 0)
             ->has('geoJson.features', 5)
         );
 });
@@ -78,5 +84,19 @@ test('admin it dashboard renders system management notice without operational bu
             ->missing('kebuns')
             ->missing('afdelings')
             ->missing('bloks')
+        );
+});
+
+test('mandor dashboard renders daily production summary', function () {
+    $mandor = User::where('email', 'mandor@palmvision.test')->firstOrFail();
+
+    $response = $this->actingAs($mandor)->get('/dashboard');
+
+    $response->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('Dashboard')
+            ->where('role', 'mandor')
+            ->where('summary.total_panen_hari_ini_kg', 0)
+            ->where('summary.total_janjang_hari_ini', 0)
         );
 });

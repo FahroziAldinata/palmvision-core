@@ -5,6 +5,9 @@ namespace App\Http\Controllers\Web;
 use App\Domain\Organisasi\Models\Afdeling;
 use App\Domain\Organisasi\Models\Blok;
 use App\Domain\Organisasi\Models\Kebun;
+use App\Domain\Produksi\Models\ProduksiHarian;
+use App\Domain\Produksi\Models\ProduksiHarianDetail;
+use App\Domain\Taksasi\Models\Taksasi;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -64,6 +67,19 @@ class DashboardController extends Controller
 
         $geoJson = $this->buildGeoJson();
 
+        $currentMonth = now()->month;
+        $currentYear = now()->year;
+
+        $totalProduksi = (float) ProduksiHarianDetail::whereHas('produksiHarian', function ($q) use ($currentMonth, $currentYear) {
+            $q->where('status_validasi', 'disetujui')
+                ->whereMonth('tanggal', $currentMonth)
+                ->whereYear('tanggal', $currentYear);
+        })->sum('berat_kg');
+
+        $totalTaksasi = (float) Taksasi::whereMonth('tanggal_taksasi', $currentMonth)
+            ->whereYear('tanggal_taksasi', $currentYear)
+            ->sum('estimasi_total_kg');
+
         return Inertia::render('Dashboard', [
             'role' => 'direksi',
             'title' => 'Dashboard Eksekutif Direksi — Seluruh Kebun',
@@ -72,6 +88,8 @@ class DashboardController extends Controller
                 'total_afdeling' => $kebuns->sum('total_afdeling'),
                 'total_blok' => $kebuns->sum('total_blok'),
                 'total_luas_ha' => round((float) $kebuns->sum('total_luas_ha'), 2),
+                'total_produksi_kg' => round($totalProduksi, 1),
+                'total_taksasi_kg' => round($totalTaksasi, 1),
             ],
             'kebuns' => $kebuns,
             'geoJson' => $geoJson,
@@ -104,6 +122,27 @@ class DashboardController extends Controller
 
         $geoJson = $kebun ? $this->buildGeoJson(kebunId: $kebun->id) : ['type' => 'FeatureCollection', 'features' => []];
 
+        $currentMonth = now()->month;
+        $currentYear = now()->year;
+
+        $totalProduksi = $kebun ? (float) ProduksiHarianDetail::whereHas('produksiHarian.blok.afdeling', function ($q) use ($kebun, $currentMonth, $currentYear) {
+            $q->where('kebun_id', $kebun->id)
+                ->where('status_validasi', 'disetujui')
+                ->whereMonth('tanggal', $currentMonth)
+                ->whereYear('tanggal', $currentYear);
+        })->sum('berat_kg') : 0.0;
+
+        $totalTaksasi = $kebun ? (float) Taksasi::whereHas('blok.afdeling', function ($q) use ($kebun, $currentMonth, $currentYear) {
+            $q->where('kebun_id', $kebun->id)
+                ->whereMonth('tanggal_taksasi', $currentMonth)
+                ->whereYear('tanggal_taksasi', $currentYear);
+        })->sum('estimasi_total_kg') : 0.0;
+
+        $menungguValidasi = $kebun ? ProduksiHarian::whereHas('blok.afdeling', function ($q) use ($kebun) {
+            $q->where('kebun_id', $kebun->id)
+                ->where('status_validasi', 'menunggu');
+        })->count() : 0;
+
         return Inertia::render('Dashboard', [
             'role' => 'manajer_kebun',
             'title' => 'Dashboard Operasional — '.($kebun ? $kebun->nama : 'Kebun Belum Ditugaskan'),
@@ -116,6 +155,9 @@ class DashboardController extends Controller
                 'total_afdeling' => $afdelings->count(),
                 'total_blok' => $afdelings->sum('total_blok'),
                 'total_luas_ha' => round((float) $afdelings->sum('total_luas_ha'), 2),
+                'total_produksi_kg' => round($totalProduksi, 1),
+                'total_taksasi_kg' => round($totalTaksasi, 1),
+                'menunggu_validasi' => $menungguValidasi,
             ],
             'afdelings' => $afdelings,
             'geoJson' => $geoJson,
@@ -151,6 +193,27 @@ class DashboardController extends Controller
 
         $geoJson = $afdeling ? $this->buildGeoJson(afdelingId: $afdeling->id) : ['type' => 'FeatureCollection', 'features' => []];
 
+        $currentMonth = now()->month;
+        $currentYear = now()->year;
+
+        $totalProduksi = $afdeling ? (float) ProduksiHarianDetail::whereHas('produksiHarian.blok', function ($q) use ($afdeling, $currentMonth, $currentYear) {
+            $q->where('afdeling_id', $afdeling->id)
+                ->where('status_validasi', 'disetujui')
+                ->whereMonth('tanggal', $currentMonth)
+                ->whereYear('tanggal', $currentYear);
+        })->sum('berat_kg') : 0.0;
+
+        $totalTaksasi = $afdeling ? (float) Taksasi::whereHas('blok', function ($q) use ($afdeling, $currentMonth, $currentYear) {
+            $q->where('afdeling_id', $afdeling->id)
+                ->whereMonth('tanggal_taksasi', $currentMonth)
+                ->whereYear('tanggal_taksasi', $currentYear);
+        })->sum('estimasi_total_kg') : 0.0;
+
+        $menungguValidasi = $afdeling ? ProduksiHarian::whereHas('blok', function ($q) use ($afdeling) {
+            $q->where('afdeling_id', $afdeling->id)
+                ->where('status_validasi', 'menunggu');
+        })->count() : 0;
+
         return Inertia::render('Dashboard', [
             'role' => 'asisten_afdeling',
             'title' => 'Dashboard Lapangan — '.($afdeling ? $afdeling->nama.' ('.$afdeling->kebun?->nama.')' : 'Afdeling Belum Ditugaskan'),
@@ -164,6 +227,9 @@ class DashboardController extends Controller
                 'total_blok' => $bloks->count(),
                 'total_luas_ha' => round((float) $bloks->sum('luas_ha'), 2),
                 'total_pokok' => $bloks->sum('jumlah_pokok'),
+                'total_produksi_kg' => round($totalProduksi, 1),
+                'total_taksasi_kg' => round($totalTaksasi, 1),
+                'menunggu_validasi' => $menungguValidasi,
             ],
             'bloks' => $bloks,
             'geoJson' => $geoJson,
@@ -194,11 +260,24 @@ class DashboardController extends Controller
     {
         $roleName = $user->getRoleNames()->first() ?? 'Pengguna';
 
+        $summary = [];
+        if ($user->hasRole('mandor')) {
+            $today = now()->toDateString();
+            $summary = [
+                'total_panen_hari_ini_kg' => (float) ProduksiHarianDetail::whereHas('produksiHarian', function ($q) use ($user, $today) {
+                    $q->where('dicatat_oleh', $user->id)->where('tanggal', $today);
+                })->sum('berat_kg'),
+                'total_janjang_hari_ini' => (int) ProduksiHarianDetail::whereHas('produksiHarian', function ($q) use ($user, $today) {
+                    $q->where('dicatat_oleh', $user->id)->where('tanggal', $today);
+                })->sum('jumlah_janjang'),
+            ];
+        }
+
         return Inertia::render('Dashboard', [
             'role' => $roleName,
             'title' => 'Dashboard '.ucwords(str_replace('_', ' ', $roleName)),
-            'message' => "Dashboard untuk peran {$roleName} akan tersedia di tahap pengembangan berikutnya sesuai roadmap PRD.",
-            'summary' => [],
+            'message' => 'Selamat datang di Portal Operasional PALMVISION.',
+            'summary' => $summary,
             'geoJson' => null,
         ]);
     }

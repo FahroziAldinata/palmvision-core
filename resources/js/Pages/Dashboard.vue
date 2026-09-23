@@ -177,6 +177,30 @@ const formatRoleName = (role: string) => {
                     </template>
                 </div>
 
+                <!-- 1.1 PRODUCTION & ESTIMATION KPI CARDS (TAHAP 2 EXTENSION) -->
+                <div v-if="summary && (summary.total_produksi_kg !== undefined || summary.total_panen_hari_ini_kg !== undefined)" class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div v-if="summary.total_produksi_kg !== undefined" class="rounded-xl border border-emerald-100 bg-white p-5 shadow-sm">
+                        <span class="text-xs font-medium uppercase tracking-wider text-emerald-800">Realisasi Produksi Bulan Ini</span>
+                        <p class="mt-2 text-2xl font-bold text-emerald-700">{{ Number(summary.total_produksi_kg).toLocaleString('id-ID') }} <span class="text-sm font-normal text-gray-500">Kg</span></p>
+                        <p class="text-xs text-gray-400 mt-1">Panen tervalidasi</p>
+                    </div>
+                    <div v-if="summary.total_taksasi_kg !== undefined" class="rounded-xl border border-blue-100 bg-white p-5 shadow-sm">
+                        <span class="text-xs font-medium uppercase tracking-wider text-blue-800">Estimasi Taksasi Bulan Ini</span>
+                        <p class="mt-2 text-2xl font-bold text-blue-700">{{ Number(summary.total_taksasi_kg).toLocaleString('id-ID') }} <span class="text-sm font-normal text-gray-500">Kg</span></p>
+                        <p class="text-xs text-gray-400 mt-1">Potensi kerapatan panen</p>
+                    </div>
+                    <div v-if="summary.menunggu_validasi !== undefined" class="rounded-xl border border-amber-100 bg-white p-5 shadow-sm">
+                        <span class="text-xs font-medium uppercase tracking-wider text-amber-800">Antrean Validasi</span>
+                        <p class="mt-2 text-2xl font-bold text-amber-700">{{ summary.menunggu_validasi }} <span class="text-sm font-normal text-gray-500">Catatan</span></p>
+                        <p class="text-xs text-gray-400 mt-1">Perlu pemeriksaan asisten</p>
+                    </div>
+                    <div v-if="summary.total_panen_hari_ini_kg !== undefined" class="rounded-xl border border-emerald-100 bg-white p-5 shadow-sm">
+                        <span class="text-xs font-medium uppercase tracking-wider text-emerald-800">Panen Dicatat Hari Ini</span>
+                        <p class="mt-2 text-2xl font-bold text-emerald-700">{{ Number(summary.total_panen_hari_ini_kg).toLocaleString('id-ID') }} <span class="text-sm font-normal text-gray-500">Kg</span></p>
+                        <p class="text-xs text-gray-400 mt-1">{{ summary.total_janjang_hari_ini || 0 }} Janjang</p>
+                    </div>
+                </div>
+
                 <!-- 2. PLACEHOLDER / NOTICE FOR ADMIN IT OR OTHER ROLES -->
                 <div v-if="message" class="rounded-xl border border-purple-100 bg-gradient-to-r from-purple-50 to-indigo-50 p-6 shadow-sm">
                     <div class="flex items-start gap-4">
