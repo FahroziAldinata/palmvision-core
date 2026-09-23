@@ -61,6 +61,12 @@ const showingNavigationDropdown = ref(false);
                                 >
                                     Data Pemanen
                                 </NavLink>
+                                <NavLink
+                                    :href="route('laporan.index')"
+                                    :active="route().current('laporan.*')"
+                                >
+                                    Laporan
+                                </NavLink>
                             </div>
                         </div>
 

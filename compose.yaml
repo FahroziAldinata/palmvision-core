@@ -30,6 +30,8 @@ services:
                 condition: service_started
             forecasting:
                 condition: service_started
+            gotenberg:
+                condition: service_started
     pgsql:
         image: 'postgis/postgis:17-3.5'
         ports:
@@ -91,6 +93,13 @@ services:
             - sail
         expose:
             - '8000'
+        restart: unless-stopped
+    gotenberg:
+        image: 'gotenberg/gotenberg:8'
+        ports:
+            - '${FORWARD_GOTENBERG_PORT:-3000}:3000'
+        networks:
+            - sail
         restart: unless-stopped
 networks:
     sail:

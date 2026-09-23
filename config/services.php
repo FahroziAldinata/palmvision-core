@@ -40,4 +40,8 @@ return [
         'api_key' => env('FORECASTING_API_KEY', 'palmvision-dev-key'),
     ],
 
+    'gotenberg' => [
+        'url' => env('GOTENBERG_URL', 'http://gotenberg:3000'),
+    ],
+
 ];

@@ -19,6 +19,7 @@ Route::get('/', function () {
 });
 
 use App\Http\Controllers\Web\DashboardController;
+use App\Http\Controllers\Web\LaporanController;
 use App\Http\Controllers\Web\PemanenController;
 use App\Http\Controllers\Web\ProduksiHarianController;
 use App\Http\Controllers\Web\TaksasiController;
@@ -59,6 +60,12 @@ Route::middleware('auth')->group(function () {
         Route::get('/create', [TaksasiController::class, 'create'])->name('create');
         Route::post('/', [TaksasiController::class, 'store'])->name('store');
         Route::get('/akurasi', [TaksasiController::class, 'akurasi'])->name('akurasi');
+    });
+
+    Route::prefix('laporan')->name('laporan.')->group(function () {
+        Route::get('/', [LaporanController::class, 'index'])->name('index');
+        Route::get('/pdf', [LaporanController::class, 'downloadPdf'])->name('pdf');
+        Route::get('/excel', [LaporanController::class, 'downloadExcel'])->name('excel');
     });
 });
 
