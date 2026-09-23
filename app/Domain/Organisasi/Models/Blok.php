@@ -60,6 +60,6 @@ class Blok extends Model
      */
     public function latestPoligon(): HasOne
     {
-        return $this->hasOne(PoligonBlok::class, 'blok_id')->latestOfMany('versi');
+        return $this->hasOne(PoligonBlok::class, 'blok_id')->orderByDesc('versi');
     }
 }

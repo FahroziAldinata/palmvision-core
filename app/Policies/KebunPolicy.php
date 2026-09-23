@@ -12,7 +12,7 @@ class KebunPolicy
      */
     public function viewAny(User $user): bool
     {
-        return $user->hasAnyRole(['direksi', 'admin_it', 'gm_kebun']);
+        return $user->hasAnyRole(['direksi', 'manajer_kebun']);
     }
 
     /**
@@ -20,11 +20,15 @@ class KebunPolicy
      */
     public function view(User $user, Kebun $kebun): bool
     {
-        if ($user->hasAnyRole(['direksi', 'admin_it', 'tim_gis'])) {
+        if ($user->hasRole('direksi')) {
             return true;
         }
 
-        if ($user->hasRole('gm_kebun')) {
+        if ($user->hasRole('tim_gis')) {
+            return true;
+        }
+
+        if ($user->hasRole('manajer_kebun')) {
             return $user->kebun_id === $kebun->id;
         }
 

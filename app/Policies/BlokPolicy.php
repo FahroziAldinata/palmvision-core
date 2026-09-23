@@ -12,7 +12,7 @@ class BlokPolicy
      */
     public function viewAny(User $user): bool
     {
-        return $user->hasAnyRole(['direksi', 'admin_it', 'gm_kebun', 'asisten_afdeling', 'mandor', 'kerani_taksasi', 'tim_gis']);
+        return $user->hasAnyRole(['direksi', 'manajer_kebun', 'asisten_afdeling', 'mandor', 'kerani_taksasi', 'tim_gis']);
     }
 
     /**
@@ -20,11 +20,15 @@ class BlokPolicy
      */
     public function view(User $user, Blok $blok): bool
     {
-        if ($user->hasAnyRole(['direksi', 'admin_it', 'tim_gis'])) {
+        if ($user->hasRole('direksi')) {
             return true;
         }
 
-        if ($user->hasRole('gm_kebun')) {
+        if ($user->hasRole('tim_gis')) {
+            return true;
+        }
+
+        if ($user->hasRole('manajer_kebun')) {
             $blok->loadMissing('afdeling');
 
             return $blok->afdeling !== null && $user->kebun_id === $blok->afdeling->kebun_id;

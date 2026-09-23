@@ -12,7 +12,7 @@ class AfdelingPolicy
      */
     public function viewAny(User $user): bool
     {
-        return $user->hasAnyRole(['direksi', 'admin_it', 'gm_kebun', 'asisten_afdeling']);
+        return $user->hasAnyRole(['direksi', 'manajer_kebun', 'asisten_afdeling']);
     }
 
     /**
@@ -20,11 +20,15 @@ class AfdelingPolicy
      */
     public function view(User $user, Afdeling $afdeling): bool
     {
-        if ($user->hasAnyRole(['direksi', 'admin_it', 'tim_gis'])) {
+        if ($user->hasRole('direksi')) {
             return true;
         }
 
-        if ($user->hasRole('gm_kebun')) {
+        if ($user->hasRole('tim_gis')) {
+            return true;
+        }
+
+        if ($user->hasRole('manajer_kebun')) {
             return $user->kebun_id === $afdeling->kebun_id;
         }
 
