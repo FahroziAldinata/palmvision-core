@@ -35,6 +35,11 @@ jobs:
           --health-timeout 5s
           --health-retries 5
 
+      gotenberg:
+        image: gotenberg/gotenberg:8
+        ports:
+          - 3000:3000
+
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -94,4 +99,5 @@ jobs:
           DB_PASSWORD: password
           REDIS_HOST: 127.0.0.1
           REDIS_PORT: 6379
+          GOTENBERG_URL: http://127.0.0.1:3000
         run: php artisan test --exclude-group=external
