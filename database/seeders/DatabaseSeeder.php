@@ -7,6 +7,7 @@ use App\Domain\Organisasi\Models\Blok;
 use App\Domain\Organisasi\Models\GrupPerusahaan;
 use App\Domain\Organisasi\Models\Kebun;
 use App\Domain\Organisasi\Models\PoligonBlok;
+use App\Domain\Pemanen\Models\Pemanen;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Database\Seeder;
@@ -231,5 +232,21 @@ class DatabaseSeeder extends Seeder
             ]
         );
         $admin->syncRoles(['admin_it']);
+
+        // 7. Pemanen (Master data awal untuk Afdeling Alpha & Beta)
+        $pemanensData = [
+            ['afdeling_id' => $createdAfdelings['AFD-A']->id, 'kode_pemanen' => 'PMN-A01', 'nama' => 'Supriyadi', 'status' => 'aktif'],
+            ['afdeling_id' => $createdAfdelings['AFD-A']->id, 'kode_pemanen' => 'PMN-A02', 'nama' => 'Budi Santoso', 'status' => 'aktif'],
+            ['afdeling_id' => $createdAfdelings['AFD-A']->id, 'kode_pemanen' => 'PMN-A03', 'nama' => 'Agus Setiawan', 'status' => 'aktif'],
+            ['afdeling_id' => $createdAfdelings['AFD-B']->id, 'kode_pemanen' => 'PMN-B01', 'nama' => 'Hendra Wijaya', 'status' => 'aktif'],
+            ['afdeling_id' => $createdAfdelings['AFD-B']->id, 'kode_pemanen' => 'PMN-B02', 'nama' => 'Rahmat Hidayat', 'status' => 'aktif'],
+        ];
+
+        foreach ($pemanensData as $pmn) {
+            Pemanen::firstOrCreate(
+                ['afdeling_id' => $pmn['afdeling_id'], 'kode_pemanen' => $pmn['kode_pemanen']],
+                ['nama' => $pmn['nama'], 'status' => $pmn['status']]
+            );
+        }
     }
 }

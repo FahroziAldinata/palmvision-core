@@ -2,6 +2,7 @@
 
 namespace App\Domain\Organisasi\Models;
 
+use App\Domain\Pemanen\Models\Pemanen;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
@@ -54,5 +55,13 @@ class Afdeling extends Model
     public function users(): HasMany
     {
         return $this->hasMany(User::class, 'afdeling_id');
+    }
+
+    /**
+     * @return HasMany<Pemanen, $this>
+     */
+    public function pemanens(): HasMany
+    {
+        return $this->hasMany(Pemanen::class, 'afdeling_id');
     }
 }

@@ -37,6 +37,24 @@ const showingNavigationDropdown = ref(false);
                                 >
                                     Dashboard
                                 </NavLink>
+                                <NavLink
+                                    :href="route('produksi.index')"
+                                    :active="route().current('produksi.*') && !route().current('produksi.validasi.*')"
+                                >
+                                    Produksi Harian
+                                </NavLink>
+                                <NavLink
+                                    :href="route('produksi.validasi.index')"
+                                    :active="route().current('produksi.validasi.*')"
+                                >
+                                    Validasi Panen
+                                </NavLink>
+                                <NavLink
+                                    :href="route('pemanen.index')"
+                                    :active="route().current('pemanen.*')"
+                                >
+                                    Data Pemanen
+                                </NavLink>
                             </div>
                         </div>
 
