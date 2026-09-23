@@ -4,12 +4,15 @@ namespace App\Models;
 
 use App\Domain\Organisasi\Models\Afdeling;
 use App\Domain\Organisasi\Models\Kebun;
+use App\Domain\Produksi\Models\ProduksiHarian;
+use App\Domain\Taksasi\Models\Taksasi;
 use Database\Factories\UserFactory;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
@@ -49,5 +52,21 @@ class User extends Authenticatable implements MustVerifyEmail
     public function afdeling(): BelongsTo
     {
         return $this->belongsTo(Afdeling::class, 'afdeling_id');
+    }
+
+    /**
+     * @return HasMany<ProduksiHarian, $this>
+     */
+    public function produksiDicatat(): HasMany
+    {
+        return $this->hasMany(ProduksiHarian::class, 'dicatat_oleh');
+    }
+
+    /**
+     * @return HasMany<Taksasi, $this>
+     */
+    public function taksasiDicatat(): HasMany
+    {
+        return $this->hasMany(Taksasi::class, 'dicatat_oleh');
     }
 }

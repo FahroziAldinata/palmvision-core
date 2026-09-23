@@ -2,6 +2,8 @@
 
 namespace App\Domain\Organisasi\Models;
 
+use App\Domain\Produksi\Models\ProduksiHarian;
+use App\Domain\Taksasi\Models\Taksasi;
 use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
@@ -73,5 +75,21 @@ class Blok extends Model
     public function latestPoligon(): HasOne
     {
         return $this->hasOne(PoligonBlok::class, 'blok_id')->orderByDesc('versi');
+    }
+
+    /**
+     * @return HasMany<ProduksiHarian, $this>
+     */
+    public function produksiHarians(): HasMany
+    {
+        return $this->hasMany(ProduksiHarian::class, 'blok_id');
+    }
+
+    /**
+     * @return HasMany<Taksasi, $this>
+     */
+    public function taksasis(): HasMany
+    {
+        return $this->hasMany(Taksasi::class, 'blok_id');
     }
 }
