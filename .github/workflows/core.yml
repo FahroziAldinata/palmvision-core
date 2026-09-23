@@ -80,6 +80,8 @@ jobs:
           DB_DATABASE: palmvision_core
           DB_USERNAME: sail
           DB_PASSWORD: password
+          REDIS_HOST: 127.0.0.1
+          REDIS_PORT: 6379
         run: php artisan migrate --force
 
       - name: Run Pest Tests
