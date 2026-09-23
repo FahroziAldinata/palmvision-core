@@ -50,6 +50,12 @@ const showingNavigationDropdown = ref(false);
                                     Validasi Panen
                                 </NavLink>
                                 <NavLink
+                                    :href="route('taksasi.index')"
+                                    :active="route().current('taksasi.*')"
+                                >
+                                    Taksasi Panen
+                                </NavLink>
+                                <NavLink
                                     :href="route('pemanen.index')"
                                     :active="route().current('pemanen.*')"
                                 >

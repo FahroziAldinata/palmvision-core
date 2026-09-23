@@ -21,6 +21,7 @@ Route::get('/', function () {
 use App\Http\Controllers\Web\DashboardController;
 use App\Http\Controllers\Web\PemanenController;
 use App\Http\Controllers\Web\ProduksiHarianController;
+use App\Http\Controllers\Web\TaksasiController;
 use App\Http\Controllers\Web\ValidasiProduksiController;
 
 Route::get('/dashboard', DashboardController::class)
@@ -51,6 +52,13 @@ Route::middleware('auth')->group(function () {
             Route::post('/{produksi}/approve', [ValidasiProduksiController::class, 'approve'])->name('approve');
             Route::post('/{produksi}/koreksi', [ValidasiProduksiController::class, 'koreksi'])->name('koreksi');
         });
+    });
+
+    Route::prefix('taksasi')->name('taksasi.')->group(function () {
+        Route::get('/', [TaksasiController::class, 'index'])->name('index');
+        Route::get('/create', [TaksasiController::class, 'create'])->name('create');
+        Route::post('/', [TaksasiController::class, 'store'])->name('store');
+        Route::get('/akurasi', [TaksasiController::class, 'akurasi'])->name('akurasi');
     });
 });
 
