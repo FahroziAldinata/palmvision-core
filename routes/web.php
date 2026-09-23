@@ -43,6 +43,7 @@ Route::middleware('auth')->group(function () {
     Route::prefix('produksi')->name('produksi.')->group(function () {
         Route::get('/', [ProduksiHarianController::class, 'index'])->name('index');
         Route::get('/create', [ProduksiHarianController::class, 'create'])->name('create');
+        Route::get('/check-existing', [ProduksiHarianController::class, 'checkExisting'])->name('check-existing');
         Route::post('/', [ProduksiHarianController::class, 'store'])->name('store');
 
         Route::prefix('validasi')->name('validasi.')->group(function () {
