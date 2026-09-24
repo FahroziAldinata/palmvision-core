@@ -44,4 +44,8 @@ return [
         'url' => env('GOTENBERG_URL', 'http://gotenberg:3000'),
     ],
 
+    'tileserv' => [
+        'url' => env('TILESERV_URL', 'http://tileserv:7800'),
+    ],
+
 ];

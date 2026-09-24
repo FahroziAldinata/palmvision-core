@@ -19,6 +19,7 @@ Route::get('/', function () {
 });
 
 use App\Http\Controllers\Web\DashboardController;
+use App\Http\Controllers\Web\GisController;
 use App\Http\Controllers\Web\LaporanController;
 use App\Http\Controllers\Web\PemanenController;
 use App\Http\Controllers\Web\ProduksiHarianController;
@@ -66,6 +67,13 @@ Route::middleware('auth')->group(function () {
         Route::get('/', [LaporanController::class, 'index'])->name('index');
         Route::get('/pdf', [LaporanController::class, 'downloadPdf'])->name('pdf');
         Route::get('/excel', [LaporanController::class, 'downloadExcel'])->name('excel');
+    });
+
+    Route::prefix('gis')->name('gis.')->group(function () {
+        Route::get('/peta', [GisController::class, 'index'])->name('index');
+        Route::get('/tiles/{z}/{x}/{y}.pbf', [GisController::class, 'tiles'])->name('tiles');
+        Route::get('/bloks/{blok}', [GisController::class, 'blockDetail'])->name('blok.detail');
+        Route::post('/bloks/{blok}/import', [GisController::class, 'importPoligon'])->name('blok.import');
     });
 });
 

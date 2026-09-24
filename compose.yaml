@@ -32,6 +32,8 @@ services:
                 condition: service_started
             gotenberg:
                 condition: service_started
+            tileserv:
+                condition: service_started
     pgsql:
         image: 'postgis/postgis:17-3.5'
         ports:
@@ -98,6 +100,13 @@ services:
         image: 'gotenberg/gotenberg:8'
         ports:
             - '${FORWARD_GOTENBERG_PORT:-3000}:3000'
+        networks:
+            - sail
+        restart: unless-stopped
+    tileserv:
+        image: 'pramsey/pg_tileserv:latest'
+        environment:
+            DATABASE_URL: 'postgresql://${DB_USERNAME:-sail}:${DB_PASSWORD:-password}@pgsql:5432/${DB_DATABASE:-palmvision}'
         networks:
             - sail
         restart: unless-stopped

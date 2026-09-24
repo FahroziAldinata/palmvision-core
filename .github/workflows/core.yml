@@ -40,6 +40,13 @@ jobs:
         ports:
           - 3000:3000
 
+      tileserv:
+        image: pramsey/pg_tileserv:latest
+        env:
+          DATABASE_URL: postgresql://sail:password@127.0.0.1:5432/palmvision_core
+        ports:
+          - 7800:7800
+
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -100,4 +107,5 @@ jobs:
           REDIS_HOST: 127.0.0.1
           REDIS_PORT: 6379
           GOTENBERG_URL: http://127.0.0.1:3000
+          TILESERV_URL: http://127.0.0.1:7800
         run: php artisan test --exclude-group=external
