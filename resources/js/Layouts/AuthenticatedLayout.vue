@@ -39,13 +39,18 @@ const showingNavigationDropdown = ref(false);
                                 </NavLink>
                                 <NavLink
                                     :href="route('produksi.index')"
-                                    :active="route().current('produksi.*') && !route().current('produksi.validasi.*')"
+                                    :active="
+                                        route().current('produksi.*') &&
+                                        !route().current('produksi.validasi.*')
+                                    "
                                 >
                                     Produksi Harian
                                 </NavLink>
                                 <NavLink
                                     :href="route('produksi.validasi.index')"
-                                    :active="route().current('produksi.validasi.*')"
+                                    :active="
+                                        route().current('produksi.validasi.*')
+                                    "
                                 >
                                     Validasi Panen
                                 </NavLink>

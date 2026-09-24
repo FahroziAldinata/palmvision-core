@@ -12,6 +12,20 @@ use Illuminate\Support\Facades\DB;
 class GisMapService
 {
     /**
+     * Threshold for switching from bulk GeoJSON to Vector Tiles.
+     * Scale of hundreds of blocks (PRD section 10 & 15) uses vector tiling.
+     */
+    public const VECTOR_TILE_THRESHOLD = 50;
+
+    /**
+     * Determine recommended render strategy based on block count.
+     */
+    public function getRecommendedRenderStrategy(int $blockCount): string
+    {
+        return $blockCount > self::VECTOR_TILE_THRESHOLD ? 'vector_tile' : 'geojson';
+    }
+
+    /**
      * Build GeoJSON FeatureCollection with enriched productivity status and agronomy data.
      *
      * @return array<string, mixed>

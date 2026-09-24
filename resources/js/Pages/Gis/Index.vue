@@ -40,7 +40,7 @@ const onFilterChange = () => {
         {
             preserveState: true,
             preserveScroll: true,
-        }
+        },
     );
 };
 
@@ -59,13 +59,16 @@ const onPolygonUpdated = () => {
 
     <AuthenticatedLayout>
         <template #header>
-            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div
+                class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between"
+            >
                 <div>
                     <h2 class="text-xl font-bold tracking-tight text-gray-900">
                         Eksplorasi Peta Spasial Kebun (GIS Penuh)
                     </h2>
-                    <p class="text-xs text-gray-500 mt-0.5">
-                        Visualisasi poligon blok, status produktivitas panen, rotasi panen, dan manajemen batas lahan
+                    <p class="mt-0.5 text-xs text-gray-500">
+                        Visualisasi poligon blok, status produktivitas panen,
+                        rotasi panen, dan manajemen batas lahan
                     </p>
                 </div>
                 <div class="flex items-center gap-3">
@@ -74,10 +77,14 @@ const onPolygonUpdated = () => {
                         <select
                             v-if="kebuns.length > 1"
                             v-model="kebunFilter"
-                            class="rounded-lg border-gray-300 text-xs py-1.5 focus:border-emerald-500 focus:ring-emerald-500 bg-white"
+                            class="rounded-lg border-gray-300 bg-white py-1.5 text-xs focus:border-emerald-500 focus:ring-emerald-500"
                         >
                             <option value="">Semua Kebun</option>
-                            <option v-for="k in kebuns" :key="k.id" :value="k.id">
+                            <option
+                                v-for="k in kebuns"
+                                :key="k.id"
+                                :value="k.id"
+                            >
                                 {{ k.nama }} ({{ k.kode_kebun }})
                             </option>
                         </select>
@@ -85,10 +92,14 @@ const onPolygonUpdated = () => {
                             v-if="afdelings.length > 0"
                             v-model="afdelingFilter"
                             @change="onFilterChange"
-                            class="rounded-lg border-gray-300 text-xs py-1.5 focus:border-emerald-500 focus:ring-emerald-500 bg-white"
+                            class="rounded-lg border-gray-300 bg-white py-1.5 text-xs focus:border-emerald-500 focus:ring-emerald-500"
                         >
                             <option value="">Semua Afdeling</option>
-                            <option v-for="a in afdelings" :key="a.id" :value="a.id">
+                            <option
+                                v-for="a in afdelings"
+                                :key="a.id"
+                                :value="a.id"
+                            >
                                 {{ a.nama }} ({{ a.kode }})
                             </option>
                         </select>
@@ -96,9 +107,11 @@ const onPolygonUpdated = () => {
 
                     <span
                         v-if="canImport"
-                        class="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 border border-emerald-200 px-3 py-1 text-xs font-semibold text-emerald-800"
+                        class="inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-800"
                     >
-                        <span class="h-2 w-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                        <span
+                            class="h-2 w-2 animate-pulse rounded-full bg-emerald-500"
+                        ></span>
                         Akses Impor GIS Aktif
                     </span>
                 </div>
@@ -106,7 +119,7 @@ const onPolygonUpdated = () => {
         </template>
 
         <div class="py-6">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
+            <div class="mx-auto max-w-7xl space-y-6 px-4 sm:px-6 lg:px-8">
                 <!-- BASE MAP COMPONENT -->
                 <BaseMap
                     :geo-json="geoJson"

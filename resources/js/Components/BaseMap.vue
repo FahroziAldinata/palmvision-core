@@ -1,9 +1,16 @@
 <script setup lang="ts">
 import axios from 'axios';
 import L from 'leaflet';
-import 'leaflet/dist/leaflet.css';
 import 'leaflet.vectorgrid';
-import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
+import 'leaflet/dist/leaflet.css';
+import {
+    computed,
+    nextTick,
+    onBeforeUnmount,
+    onMounted,
+    ref,
+    watch,
+} from 'vue';
 
 interface GeoJsonFeature {
     type: 'Feature';
@@ -94,7 +101,7 @@ const props = withDefaults(
         tileUrl: '/gis/tiles/{z}/{x}/{y}.pbf',
         kebunId: null,
         afdelingId: null,
-    }
+    },
 );
 
 const emit = defineEmits<{
@@ -110,9 +117,23 @@ let vectorTileLayer: any = null;
 // Map Rendering Mode: 'auto' | 'geojson' | 'vector_tile'
 const renderMode = ref<'auto' | 'geojson' | 'vector_tile'>('auto');
 
+// Threshold for automatic vector tiling (PRD section 10 & 15: hundreds of blocks scale)
+const VECTOR_TILE_THRESHOLD = 50;
+
+// Effective rendering mode: 'auto' automatically selects vector_tile if blocks > 50
+const effectiveRenderMode = computed<'geojson' | 'vector_tile'>(() => {
+    if (renderMode.value === 'vector_tile') return 'vector_tile';
+    if (renderMode.value === 'geojson') return 'geojson';
+
+    const count = props.geoJson?.features?.length ?? 0;
+    return count > VECTOR_TILE_THRESHOLD ? 'vector_tile' : 'geojson';
+});
+
 // Reactive Filters
 const filterAfdeling = ref<string>('all');
-const filterStatus = ref<'all' | 'hijau' | 'kuning' | 'merah' | 'netral'>('all');
+const filterStatus = ref<'all' | 'hijau' | 'kuning' | 'merah' | 'netral'>(
+    'all',
+);
 const filterRotationStart = ref<string>('');
 const filterRotationEnd = ref<string>('');
 
@@ -157,7 +178,8 @@ const filteredFeatures = computed(() => {
 
         // 1. Afdeling filter
         if (filterAfdeling.value !== 'all') {
-            const afdMatch = (p.afdeling_id && p.afdeling_id === filterAfdeling.value) ||
+            const afdMatch =
+                (p.afdeling_id && p.afdeling_id === filterAfdeling.value) ||
                 (p.afdeling_nama && p.afdeling_nama === filterAfdeling.value);
             if (!afdMatch) return false;
         }
@@ -171,8 +193,10 @@ const filteredFeatures = computed(() => {
         if (filterRotationStart.value || filterRotationEnd.value) {
             if (!p.tanggal_rotasi_berikutnya) return false;
             const rotasi = p.tanggal_rotasi_berikutnya;
-            if (filterRotationStart.value && rotasi < filterRotationStart.value) return false;
-            if (filterRotationEnd.value && rotasi > filterRotationEnd.value) return false;
+            if (filterRotationStart.value && rotasi < filterRotationStart.value)
+                return false;
+            if (filterRotationEnd.value && rotasi > filterRotationEnd.value)
+                return false;
         }
 
         return true;
@@ -183,14 +207,30 @@ const filteredFeatures = computed(() => {
 const getStatusColors = (status: 'hijau' | 'kuning' | 'merah' | 'netral') => {
     switch (status) {
         case 'hijau':
-            return { stroke: '#059669', fill: '#10b981', label: 'Deviasi ≤ 5% (Sangat Baik)' };
+            return {
+                stroke: '#059669',
+                fill: '#10b981',
+                label: 'Deviasi ≤ 5% (Sangat Baik)',
+            };
         case 'kuning':
-            return { stroke: '#d97706', fill: '#f59e0b', label: 'Deviasi 5–15% (Waspada)' };
+            return {
+                stroke: '#d97706',
+                fill: '#f59e0b',
+                label: 'Deviasi 5–15% (Waspada)',
+            };
         case 'merah':
-            return { stroke: '#dc2626', fill: '#ef4444', label: 'Deviasi > 15% (Anomali)' };
+            return {
+                stroke: '#dc2626',
+                fill: '#ef4444',
+                label: 'Deviasi > 15% (Anomali)',
+            };
         case 'netral':
         default:
-            return { stroke: '#64748b', fill: '#94a3b8', label: 'Belum Ada Data' };
+            return {
+                stroke: '#64748b',
+                fill: '#94a3b8',
+                label: 'Belum Ada Data',
+            };
     }
 };
 
@@ -280,13 +320,15 @@ const renderVectorTileLayer = () => {
         const queryParams = new URLSearchParams();
         if (props.kebunId) queryParams.set('kebun_id', props.kebunId);
         if (props.afdelingId) queryParams.set('afdeling_id', props.afdelingId);
-        const queryStr = queryParams.toString() ? `?${queryParams.toString()}` : '';
+        const queryStr = queryParams.toString()
+            ? `?${queryParams.toString()}`
+            : '';
         const tileEndpoint = `${props.tileUrl}${queryStr}`;
 
         // @ts-ignore
         vectorTileLayer = (L as any).vectorGrid.protobuf(tileEndpoint, {
             vectorTileLayerStyles: {
-                mvt_poligon_blok: (properties: any) => {
+                mvt_poligon_blok: () => {
                     return {
                         weight: 1.5,
                         color: '#0284c7', // Sky-600
@@ -311,7 +353,10 @@ const renderVectorTileLayer = () => {
 
         vectorTileLayer.addTo(map);
     } catch (e) {
-        console.warn('Vector tile layer initialization failed, falling back to GeoJSON:', e);
+        console.warn(
+            'Vector tile layer initialization failed, falling back to GeoJSON:',
+            e,
+        );
         renderGeoJsonLayer();
     }
 };
@@ -320,7 +365,7 @@ const renderVectorTileLayer = () => {
 const updateMapLayers = () => {
     if (!map) return;
 
-    if (renderMode.value === 'vector_tile') {
+    if (effectiveRenderMode.value === 'vector_tile') {
         if (geoJsonLayer) {
             map.removeLayer(geoJsonLayer);
             geoJsonLayer = null;
@@ -349,7 +394,8 @@ const openBlockDetail = async (blokId: string) => {
         const response = await axios.get(`/gis/bloks/${blokId}`);
         blockDetail.value = response.data;
     } catch (err: any) {
-        uploadError.value = err.response?.data?.message || 'Gagal memuat detail blok.';
+        uploadError.value =
+            err.response?.data?.message || 'Gagal memuat detail blok.';
     } finally {
         isLoadingDetail.value = false;
     }
@@ -385,11 +431,16 @@ const submitPolygonUpload = async () => {
     formData.append('file', uploadFile.value);
 
     try {
-        const response = await axios.post(`/gis/bloks/${selectedBlockId.value}/import`, formData, {
-            headers: { 'Content-Type': 'multipart/form-data' },
-        });
+        const response = await axios.post(
+            `/gis/bloks/${selectedBlockId.value}/import`,
+            formData,
+            {
+                headers: { 'Content-Type': 'multipart/form-data' },
+            },
+        );
 
-        uploadSuccess.value = response.data.message || 'Poligon berhasil diperbarui!';
+        uploadSuccess.value =
+            response.data.message || 'Poligon berhasil diperbarui!';
         uploadFile.value = null;
 
         // Refresh detail panel data
@@ -401,7 +452,8 @@ const submitPolygonUpload = async () => {
         } else if (err.response?.data?.message) {
             uploadError.value = err.response.data.message;
         } else {
-            uploadError.value = 'Gagal mengunggah poligon. Periksa berkas dan pastikan tidak tumpang tindih (overlap).';
+            uploadError.value =
+                'Gagal mengunggah poligon. Periksa berkas dan pastikan tidak tumpang tindih (overlap).';
         }
     } finally {
         isUploading.value = false;
@@ -426,20 +478,26 @@ onMounted(() => {
 
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         maxZoom: 19,
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+        attribution:
+            '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
     }).addTo(map);
 
     updateMapLayers();
 });
 
 watch(
-    () => [props.geoJson, filteredFeatures.value, renderMode.value],
+    () => [
+        props.geoJson,
+        filteredFeatures.value,
+        renderMode.value,
+        effectiveRenderMode.value,
+    ],
     () => {
         nextTick(() => {
             updateMapLayers();
         });
     },
-    { deep: true }
+    { deep: true },
 );
 
 onBeforeUnmount(() => {
@@ -451,54 +509,103 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-    <div class="relative w-full rounded-2xl border border-gray-200 bg-white shadow-sm overflow-hidden flex flex-col">
+    <div
+        class="relative flex w-full flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm"
+    >
         <!-- MAP CONTROLS & FILTER BAR -->
         <div class="border-b border-gray-200 bg-gray-50/90 p-4">
-            <div class="flex flex-wrap items-center justify-between gap-3 mb-3">
+            <div class="mb-3 flex flex-wrap items-center justify-between gap-3">
                 <div class="flex items-center gap-2">
                     <span class="relative flex h-3 w-3">
-                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                        <span class="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
+                        <span
+                            class="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75"
+                        ></span>
+                        <span
+                            class="relative inline-flex h-3 w-3 rounded-full bg-emerald-500"
+                        ></span>
                     </span>
-                    <h3 class="text-sm font-bold text-gray-900 tracking-tight">Peta Spasial Blok Kebun (GIS Leaflet)</h3>
-                    <span class="ml-2 inline-flex items-center rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-semibold text-emerald-700 border border-emerald-200">
+                    <h3 class="text-sm font-bold tracking-tight text-gray-900">
+                        Peta Spasial Blok Kebun (GIS Leaflet)
+                    </h3>
+                    <span
+                        class="ml-2 inline-flex items-center rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-xs font-semibold text-emerald-700"
+                    >
                         {{ filteredFeatures.length }} Poligon Tampil
                     </span>
                 </div>
 
-                <!-- MODE TOGGLE (GeoJSON vs Vector Tile pg_tileserv) -->
-                <div class="flex items-center gap-1.5 bg-gray-200/80 p-0.5 rounded-lg text-xs font-medium">
+                <!-- MODE TOGGLE (Dual-Mode: Auto Adaptif / GeoJSON / Vector Tile pg_tileserv) -->
+                <div
+                    class="flex items-center gap-1.5 rounded-lg bg-gray-200/80 p-0.5 text-xs font-medium"
+                >
                     <button
                         type="button"
                         @click="renderMode = 'auto'"
-                        class="px-2.5 py-1 rounded-md transition-all"
-                        :class="renderMode === 'auto' ? 'bg-white text-gray-900 font-semibold shadow-sm' : 'text-gray-600 hover:text-gray-900'"
+                        class="flex items-center gap-1 rounded-md px-2.5 py-1 transition-all"
+                        :class="
+                            renderMode === 'auto'
+                                ? 'bg-white font-semibold text-gray-900 shadow-sm'
+                                : 'text-gray-600 hover:text-gray-900'
+                        "
+                        :title="`Mode Otomatis: Menggunakan ${effectiveRenderMode === 'vector_tile' ? 'Vector Tile (>50 blok)' : 'GeoJSON (≤50 blok)'}`"
+                    >
+                        Auto ({{
+                            effectiveRenderMode === 'vector_tile'
+                                ? 'Tile'
+                                : 'GeoJSON'
+                        }})
+                    </button>
+                    <button
+                        type="button"
+                        @click="renderMode = 'geojson'"
+                        class="rounded-md px-2.5 py-1 transition-all"
+                        :class="
+                            renderMode === 'geojson'
+                                ? 'bg-white font-semibold text-gray-900 shadow-sm'
+                                : 'text-gray-600 hover:text-gray-900'
+                        "
                     >
                         GeoJSON Detil
                     </button>
                     <button
                         type="button"
                         @click="renderMode = 'vector_tile'"
-                        class="px-2.5 py-1 rounded-md transition-all flex items-center gap-1"
-                        :class="renderMode === 'vector_tile' ? 'bg-white text-sky-700 font-semibold shadow-sm' : 'text-gray-600 hover:text-gray-900'"
+                        class="flex items-center gap-1 rounded-md px-2.5 py-1 transition-all"
+                        :class="
+                            renderMode === 'vector_tile'
+                                ? 'bg-white font-semibold text-sky-700 shadow-sm'
+                                : 'text-gray-600 hover:text-gray-900'
+                        "
                     >
-                        <span class="h-1.5 w-1.5 rounded-full bg-sky-500"></span>
-                        Vector Tile (pg_tileserv)
+                        <span
+                            class="h-1.5 w-1.5 rounded-full bg-sky-500"
+                        ></span>
+                        Vector Tile
                     </button>
                 </div>
             </div>
 
             <!-- INTERACTIVE FILTERS (US-05 AC3) -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 pt-2 border-t border-gray-200/60 text-xs">
+            <div
+                class="grid grid-cols-1 gap-3 border-t border-gray-200/60 pt-2 text-xs sm:grid-cols-2 lg:grid-cols-4"
+            >
                 <!-- 1. Afdeling Filter -->
                 <div>
-                    <label class="block font-semibold text-gray-700 mb-1">Filter Afdeling:</label>
+                    <label class="mb-1 block font-semibold text-gray-700"
+                        >Filter Afdeling:</label
+                    >
                     <select
                         v-model="filterAfdeling"
-                        class="w-full rounded-lg border-gray-300 text-xs py-1.5 focus:border-emerald-500 focus:ring-emerald-500 bg-white"
+                        class="w-full rounded-lg border-gray-300 bg-white py-1.5 text-xs focus:border-emerald-500 focus:ring-emerald-500"
                     >
-                        <option value="all">Semua Afdeling ({{ availableAfdelings.length }})</option>
-                        <option v-for="afd in availableAfdelings" :key="afd.id" :value="afd.id">
+                        <option value="all">
+                            Semua Afdeling ({{ availableAfdelings.length }})
+                        </option>
+                        <option
+                            v-for="afd in availableAfdelings"
+                            :key="afd.id"
+                            :value="afd.id"
+                        >
                             {{ afd.nama }}
                         </option>
                     </select>
@@ -506,41 +613,49 @@ onBeforeUnmount(() => {
 
                 <!-- 2. Status Produktivitas Filter (Hijau/Kuning/Merah/Netral) -->
                 <div>
-                    <label class="block font-semibold text-gray-700 mb-1">Status Produktivitas:</label>
+                    <label class="mb-1 block font-semibold text-gray-700"
+                        >Status Produktivitas:</label
+                    >
                     <select
                         v-model="filterStatus"
-                        class="w-full rounded-lg border-gray-300 text-xs py-1.5 focus:border-emerald-500 focus:ring-emerald-500 bg-white"
+                        class="w-full rounded-lg border-gray-300 bg-white py-1.5 text-xs focus:border-emerald-500 focus:ring-emerald-500"
                     >
                         <option value="all">Semua Status</option>
                         <option value="hijau">🟢 Hijau (Deviasi ≤ 5%)</option>
-                        <option value="kuning">🟡 Kuning (Deviasi 5–15%)</option>
+                        <option value="kuning">
+                            🟡 Kuning (Deviasi 5–15%)
+                        </option>
                         <option value="merah">🔴 Merah (Deviasi > 15%)</option>
                         <option value="netral">⚪ Belum Ada Data</option>
                     </select>
                 </div>
 
                 <!-- 3. Rentang Tanggal Rotasi Panen (Start - End) -->
-                <div class="sm:col-span-2 flex items-end gap-2">
+                <div class="flex items-end gap-2 sm:col-span-2">
                     <div class="flex-1">
-                        <label class="block font-semibold text-gray-700 mb-1">Rotasi Panen Mulai:</label>
+                        <label class="mb-1 block font-semibold text-gray-700"
+                            >Rotasi Panen Mulai:</label
+                        >
                         <input
                             type="date"
                             v-model="filterRotationStart"
-                            class="w-full rounded-lg border-gray-300 text-xs py-1.5 focus:border-emerald-500 focus:ring-emerald-500 bg-white"
+                            class="w-full rounded-lg border-gray-300 bg-white py-1.5 text-xs focus:border-emerald-500 focus:ring-emerald-500"
                         />
                     </div>
                     <div class="flex-1">
-                        <label class="block font-semibold text-gray-700 mb-1">Hingga:</label>
+                        <label class="mb-1 block font-semibold text-gray-700"
+                            >Hingga:</label
+                        >
                         <input
                             type="date"
                             v-model="filterRotationEnd"
-                            class="w-full rounded-lg border-gray-300 text-xs py-1.5 focus:border-emerald-500 focus:ring-emerald-500 bg-white"
+                            class="w-full rounded-lg border-gray-300 bg-white py-1.5 text-xs focus:border-emerald-500 focus:ring-emerald-500"
                         />
                     </div>
                     <button
                         type="button"
                         @click="resetFilters"
-                        class="px-2.5 py-1.5 rounded-lg border border-gray-300 bg-white text-gray-700 hover:bg-gray-100 font-medium text-xs whitespace-nowrap"
+                        class="whitespace-nowrap rounded-lg border border-gray-300 bg-white px-2.5 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-100"
                         title="Reset Filter"
                     >
                         Reset
@@ -549,224 +664,452 @@ onBeforeUnmount(() => {
             </div>
 
             <!-- STATUS LEGEND (ADR 0010) -->
-            <div class="mt-3 flex flex-wrap items-center gap-4 text-[11px] text-gray-600 bg-white/70 p-2 rounded-lg border border-gray-200/50">
+            <div
+                class="mt-3 flex flex-wrap items-center gap-4 rounded-lg border border-gray-200/50 bg-white/70 p-2 text-[11px] text-gray-600"
+            >
                 <span class="font-semibold text-gray-700">Legenda Status:</span>
                 <div class="flex items-center gap-1.5">
-                    <span class="h-3 w-3 rounded-full bg-emerald-500 border border-emerald-600"></span>
+                    <span
+                        class="h-3 w-3 rounded-full border border-emerald-600 bg-emerald-500"
+                    ></span>
                     <span>Hijau (Deviasi ≤ 5%)</span>
                 </div>
                 <div class="flex items-center gap-1.5">
-                    <span class="h-3 w-3 rounded-full bg-amber-500 border border-amber-600"></span>
+                    <span
+                        class="h-3 w-3 rounded-full border border-amber-600 bg-amber-500"
+                    ></span>
                     <span>Kuning (Deviasi 5–15%)</span>
                 </div>
                 <div class="flex items-center gap-1.5">
-                    <span class="h-3 w-3 rounded-full bg-rose-500 border border-rose-600"></span>
+                    <span
+                        class="h-3 w-3 rounded-full border border-rose-600 bg-rose-500"
+                    ></span>
                     <span>Merah (Deviasi > 15%)</span>
                 </div>
                 <div class="flex items-center gap-1.5">
-                    <span class="h-3 w-3 rounded-full bg-slate-400 border border-slate-500"></span>
+                    <span
+                        class="h-3 w-3 rounded-full border border-slate-500 bg-slate-400"
+                    ></span>
                     <span>Netral / Belum Ada Data</span>
                 </div>
             </div>
         </div>
 
         <!-- MAP CONTAINER -->
-        <div class="relative w-full h-[520px]">
-            <div ref="mapContainer" class="h-full w-full z-0"></div>
+        <div class="relative h-[520px] w-full">
+            <div ref="mapContainer" class="z-0 h-full w-full"></div>
 
             <!-- SLIDE-OVER DETAIL & IMPORT PANEL (US-05 AC2, US-06) -->
             <div
                 v-if="isPanelOpen"
-                class="absolute top-0 right-0 h-full w-full sm:w-[480px] bg-white border-l border-gray-200 shadow-2xl z-20 flex flex-col transition-all overflow-hidden"
+                class="absolute right-0 top-0 z-20 flex h-full w-full flex-col overflow-hidden border-l border-gray-200 bg-white shadow-2xl transition-all sm:w-[480px]"
             >
                 <!-- PANEL HEADER -->
-                <div class="flex items-center justify-between px-5 py-4 border-b border-gray-200 bg-gray-50/90">
+                <div
+                    class="flex items-center justify-between border-b border-gray-200 bg-gray-50/90 px-5 py-4"
+                >
                     <div class="flex items-center gap-2">
-                        <span class="font-bold text-base text-gray-900">
+                        <span class="text-base font-bold text-gray-900">
                             Detail Blok {{ blockDetail?.blok?.kode_blok || '' }}
                         </span>
                         <span
                             v-if="blockDetail?.blok?.status_warna"
-                            class="px-2 py-0.5 rounded-full text-xs font-semibold capitalize"
+                            class="rounded-full px-2 py-0.5 text-xs font-semibold capitalize"
                             :class="{
-                                'bg-emerald-100 text-emerald-800 border border-emerald-200': blockDetail.blok.status_warna === 'hijau',
-                                'bg-amber-100 text-amber-800 border border-amber-200': blockDetail.blok.status_warna === 'kuning',
-                                'bg-rose-100 text-rose-800 border border-rose-200': blockDetail.blok.status_warna === 'merah',
-                                'bg-gray-100 text-gray-800 border border-gray-200': blockDetail.blok.status_warna === 'netral'
+                                'border border-emerald-200 bg-emerald-100 text-emerald-800':
+                                    blockDetail.blok.status_warna === 'hijau',
+                                'border border-amber-200 bg-amber-100 text-amber-800':
+                                    blockDetail.blok.status_warna === 'kuning',
+                                'border border-rose-200 bg-rose-100 text-rose-800':
+                                    blockDetail.blok.status_warna === 'merah',
+                                'border border-gray-200 bg-gray-100 text-gray-800':
+                                    blockDetail.blok.status_warna === 'netral',
                             }"
                         >
                             {{ blockDetail.blok.status_warna }}
-                            {{ blockDetail.blok.persentase_deviasi !== null ? `(${blockDetail.blok.persentase_deviasi > 0 ? '+' : ''}${blockDetail.blok.persentase_deviasi}%)` : '' }}
+                            {{
+                                blockDetail.blok.persentase_deviasi !== null
+                                    ? `(${blockDetail.blok.persentase_deviasi > 0 ? '+' : ''}${blockDetail.blok.persentase_deviasi}%)`
+                                    : ''
+                            }}
                         </span>
                     </div>
                     <button
                         type="button"
                         @click="closePanel"
-                        class="rounded-lg p-1 text-gray-400 hover:text-gray-600 hover:bg-gray-100"
+                        class="rounded-lg p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
                     >
-                        <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        <svg
+                            class="h-5 w-5"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                        >
+                            <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                stroke-width="2"
+                                d="M6 18L18 6M6 6l12 12"
+                            />
                         </svg>
                     </button>
                 </div>
 
                 <!-- TABS (Detail vs Import) -->
-                <div v-if="canImport" class="flex border-b border-gray-200 bg-white text-xs font-semibold">
+                <div
+                    v-if="canImport"
+                    class="flex border-b border-gray-200 bg-white text-xs font-semibold"
+                >
                     <button
                         type="button"
                         @click="activeTab = 'detail'"
-                        class="flex-1 py-2.5 text-center border-b-2 transition-colors"
-                        :class="activeTab === 'detail' ? 'border-emerald-600 text-emerald-800 bg-emerald-50/30' : 'border-transparent text-gray-500 hover:text-gray-700'"
+                        class="flex-1 border-b-2 py-2.5 text-center transition-colors"
+                        :class="
+                            activeTab === 'detail'
+                                ? 'border-emerald-600 bg-emerald-50/30 text-emerald-800'
+                                : 'border-transparent text-gray-500 hover:text-gray-700'
+                        "
                     >
                         Ringkasan Agronomi & Riwayat
                     </button>
                     <button
                         type="button"
                         @click="activeTab = 'import'"
-                        class="flex-1 py-2.5 text-center border-b-2 transition-colors flex items-center justify-center gap-1.5"
-                        :class="activeTab === 'import' ? 'border-emerald-600 text-emerald-800 bg-emerald-50/30' : 'border-transparent text-gray-500 hover:text-gray-700'"
+                        class="flex flex-1 items-center justify-center gap-1.5 border-b-2 py-2.5 text-center transition-colors"
+                        :class="
+                            activeTab === 'import'
+                                ? 'border-emerald-600 bg-emerald-50/30 text-emerald-800'
+                                : 'border-transparent text-gray-500 hover:text-gray-700'
+                        "
                     >
-                        <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                        <svg
+                            class="h-4 w-4"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                        >
+                            <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                stroke-width="2"
+                                d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"
+                            />
                         </svg>
                         Perbarui Poligon (US-06)
                     </button>
                 </div>
 
                 <!-- PANEL BODY -->
-                <div class="flex-1 overflow-y-auto p-5 text-xs space-y-4">
+                <div class="flex-1 space-y-4 overflow-y-auto p-5 text-xs">
                     <!-- LOADING STATE -->
-                    <div v-if="isLoadingDetail" class="flex items-center justify-center py-12">
-                        <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-600"></div>
-                        <span class="ml-3 text-gray-600 font-medium">Memuat data spasial & agronomi...</span>
+                    <div
+                        v-if="isLoadingDetail"
+                        class="flex items-center justify-center py-12"
+                    >
+                        <div
+                            class="h-8 w-8 animate-spin rounded-full border-b-2 border-emerald-600"
+                        ></div>
+                        <span class="ml-3 font-medium text-gray-600"
+                            >Memuat data spasial & agronomi...</span
+                        >
                     </div>
 
                     <!-- TAB 1: AGRONOMY DETAIL (US-05 AC2) -->
-                    <div v-else-if="activeTab === 'detail' && blockDetail" class="space-y-4">
+                    <div
+                        v-else-if="activeTab === 'detail' && blockDetail"
+                        class="space-y-4"
+                    >
                         <!-- 4 KEY STATS GRID -->
                         <div class="grid grid-cols-2 gap-3">
-                            <div class="p-3 bg-gray-50 rounded-xl border border-gray-200">
-                                <span class="text-gray-500 block">Luas Area</span>
-                                <span class="text-base font-bold text-gray-900">{{ blockDetail.blok.luas_ha.toLocaleString('id-ID') }} Ha</span>
-                                <span class="text-[10px] text-gray-400 block mt-0.5">Dihitung otomatis PostGIS</span>
+                            <div
+                                class="rounded-xl border border-gray-200 bg-gray-50 p-3"
+                            >
+                                <span class="block text-gray-500"
+                                    >Luas Area</span
+                                >
+                                <span class="text-base font-bold text-gray-900"
+                                    >{{
+                                        blockDetail.blok.luas_ha.toLocaleString(
+                                            'id-ID',
+                                        )
+                                    }}
+                                    Ha</span
+                                >
+                                <span
+                                    class="mt-0.5 block text-[10px] text-gray-400"
+                                    >Dihitung otomatis PostGIS</span
+                                >
                             </div>
-                            <div class="p-3 bg-gray-50 rounded-xl border border-gray-200">
-                                <span class="text-gray-500 block">Populasi Tanaman</span>
-                                <span class="text-base font-bold text-gray-900">{{ blockDetail.blok.jumlah_pokok.toLocaleString('id-ID') }} Pokok</span>
-                                <span class="text-[10px] text-gray-400 block mt-0.5">{{ blockDetail.blok.kategori_tanah }}</span>
+                            <div
+                                class="rounded-xl border border-gray-200 bg-gray-50 p-3"
+                            >
+                                <span class="block text-gray-500"
+                                    >Populasi Tanaman</span
+                                >
+                                <span class="text-base font-bold text-gray-900"
+                                    >{{
+                                        blockDetail.blok.jumlah_pokok.toLocaleString(
+                                            'id-ID',
+                                        )
+                                    }}
+                                    Pokok</span
+                                >
+                                <span
+                                    class="mt-0.5 block text-[10px] text-gray-400"
+                                    >{{ blockDetail.blok.kategori_tanah }}</span
+                                >
                             </div>
-                            <div class="p-3 bg-emerald-50/50 rounded-xl border border-emerald-200">
-                                <span class="text-emerald-700 font-medium block">Usia Tanaman</span>
-                                <span class="text-base font-bold text-emerald-900">{{ blockDetail.blok.usia_tanaman }}</span>
-                                <span class="text-[10px] text-emerald-600 block mt-0.5">Tanam: {{ blockDetail.blok.tanggal_tanam || '-' }}</span>
+                            <div
+                                class="rounded-xl border border-emerald-200 bg-emerald-50/50 p-3"
+                            >
+                                <span class="block font-medium text-emerald-700"
+                                    >Usia Tanaman</span
+                                >
+                                <span
+                                    class="text-base font-bold text-emerald-900"
+                                    >{{ blockDetail.blok.usia_tanaman }}</span
+                                >
+                                <span
+                                    class="mt-0.5 block text-[10px] text-emerald-600"
+                                    >Tanam:
+                                    {{
+                                        blockDetail.blok.tanggal_tanam || '-'
+                                    }}</span
+                                >
                             </div>
-                            <div class="p-3 bg-blue-50/50 rounded-xl border border-blue-200">
-                                <span class="text-blue-700 font-medium block">Tanggal Rotasi Berikutnya</span>
-                                <span class="text-base font-bold text-blue-900">{{ blockDetail.blok.tanggal_rotasi_label }}</span>
-                                <span class="text-[10px] text-blue-600 block mt-0.5">Siklus: {{ blockDetail.blok.siklus_rotasi_hari }} Hari (Pola 8/10)</span>
+                            <div
+                                class="rounded-xl border border-blue-200 bg-blue-50/50 p-3"
+                            >
+                                <span class="block font-medium text-blue-700"
+                                    >Tanggal Rotasi Berikutnya</span
+                                >
+                                <span
+                                    class="text-base font-bold text-blue-900"
+                                    >{{
+                                        blockDetail.blok.tanggal_rotasi_label
+                                    }}</span
+                                >
+                                <span
+                                    class="mt-0.5 block text-[10px] text-blue-600"
+                                    >Siklus:
+                                    {{ blockDetail.blok.siklus_rotasi_hari }}
+                                    Hari (Pola 8/10)</span
+                                >
                             </div>
                         </div>
 
                         <!-- TAKSASI TERAKHIR -->
-                        <div class="bg-white rounded-xl border border-gray-200 p-4 shadow-xs">
-                            <div class="flex items-center justify-between mb-2">
-                                <h4 class="font-bold text-gray-900">Taksasi Panen Terakhir (US-03)</h4>
-                                <span class="text-[10px] text-gray-400">{{ blockDetail.taksasi_terakhir?.tanggal_taksasi || 'Belum ada data' }}</span>
+                        <div
+                            class="shadow-xs rounded-xl border border-gray-200 bg-white p-4"
+                        >
+                            <div class="mb-2 flex items-center justify-between">
+                                <h4 class="font-bold text-gray-900">
+                                    Taksasi Panen Terakhir (US-03)
+                                </h4>
+                                <span class="text-[10px] text-gray-400">{{
+                                    blockDetail.taksasi_terakhir
+                                        ?.tanggal_taksasi || 'Belum ada data'
+                                }}</span>
                             </div>
-                            <div v-if="blockDetail.taksasi_terakhir" class="grid grid-cols-3 gap-2 pt-2 border-t border-gray-100 text-center">
-                                <div class="bg-gray-50 p-2 rounded-lg">
-                                    <span class="text-gray-500 block text-[10px]">Estimasi Janjang</span>
-                                    <span class="font-bold text-gray-900">{{ blockDetail.taksasi_terakhir.estimasi_janjang }}</span>
+                            <div
+                                v-if="blockDetail.taksasi_terakhir"
+                                class="grid grid-cols-3 gap-2 border-t border-gray-100 pt-2 text-center"
+                            >
+                                <div class="rounded-lg bg-gray-50 p-2">
+                                    <span
+                                        class="block text-[10px] text-gray-500"
+                                        >Estimasi Janjang</span
+                                    >
+                                    <span class="font-bold text-gray-900">{{
+                                        blockDetail.taksasi_terakhir
+                                            .estimasi_janjang
+                                    }}</span>
                                 </div>
-                                <div class="bg-gray-50 p-2 rounded-lg">
-                                    <span class="text-gray-500 block text-[10px]">BJR Estimasi</span>
-                                    <span class="font-bold text-gray-900">{{ blockDetail.taksasi_terakhir.estimasi_bjr }} Kg</span>
+                                <div class="rounded-lg bg-gray-50 p-2">
+                                    <span
+                                        class="block text-[10px] text-gray-500"
+                                        >BJR Estimasi</span
+                                    >
+                                    <span class="font-bold text-gray-900"
+                                        >{{
+                                            blockDetail.taksasi_terakhir
+                                                .estimasi_bjr
+                                        }}
+                                        Kg</span
+                                    >
                                 </div>
-                                <div class="bg-gray-50 p-2 rounded-lg">
-                                    <span class="text-gray-500 block text-[10px]">Estimasi Total</span>
-                                    <span class="font-bold text-emerald-700">{{ blockDetail.taksasi_terakhir.estimasi_total_kg.toLocaleString('id-ID') }} Kg</span>
+                                <div class="rounded-lg bg-gray-50 p-2">
+                                    <span
+                                        class="block text-[10px] text-gray-500"
+                                        >Estimasi Total</span
+                                    >
+                                    <span class="font-bold text-emerald-700"
+                                        >{{
+                                            blockDetail.taksasi_terakhir.estimasi_total_kg.toLocaleString(
+                                                'id-ID',
+                                            )
+                                        }}
+                                        Kg</span
+                                    >
                                 </div>
                             </div>
-                            <div v-else class="text-gray-400 text-center py-3">
+                            <div v-else class="py-3 text-center text-gray-400">
                                 Belum ada riwayat taksasi untuk blok ini.
                             </div>
                         </div>
 
                         <!-- RIWAYAT PRODUKSI TERAKHIR -->
-                        <div class="bg-white rounded-xl border border-gray-200 p-4 shadow-xs">
-                            <div class="flex items-center justify-between mb-2">
-                                <h4 class="font-bold text-gray-900">Riwayat Panen Terakhir (5 Entri)</h4>
-                                <span class="text-[10px] text-gray-400">Produksi Harian</span>
+                        <div
+                            class="shadow-xs rounded-xl border border-gray-200 bg-white p-4"
+                        >
+                            <div class="mb-2 flex items-center justify-between">
+                                <h4 class="font-bold text-gray-900">
+                                    Riwayat Panen Terakhir (5 Entri)
+                                </h4>
+                                <span class="text-[10px] text-gray-400"
+                                    >Produksi Harian</span
+                                >
                             </div>
-                            <div v-if="blockDetail.riwayat_produksi.length > 0" class="divide-y divide-gray-100">
+                            <div
+                                v-if="blockDetail.riwayat_produksi.length > 0"
+                                class="divide-y divide-gray-100"
+                            >
                                 <div
                                     v-for="p in blockDetail.riwayat_produksi"
                                     :key="p.id"
-                                    class="py-2 flex items-center justify-between"
+                                    class="flex items-center justify-between py-2"
                                 >
                                     <div>
-                                        <span class="font-semibold text-gray-800">{{ p.tanggal }}</span>
-                                        <span class="text-gray-400 text-[10px] block">Mandor: {{ p.mandor }}</span>
+                                        <span
+                                            class="font-semibold text-gray-800"
+                                            >{{ p.tanggal }}</span
+                                        >
+                                        <span
+                                            class="block text-[10px] text-gray-400"
+                                            >Mandor: {{ p.mandor }}</span
+                                        >
                                     </div>
                                     <div class="text-right">
-                                        <span class="font-bold text-gray-900">{{ p.total_berat_kg.toLocaleString('id-ID') }} Kg</span>
-                                        <span class="text-gray-500 text-[10px] block">{{ p.total_janjang }} Janjang</span>
+                                        <span class="font-bold text-gray-900"
+                                            >{{
+                                                p.total_berat_kg.toLocaleString(
+                                                    'id-ID',
+                                                )
+                                            }}
+                                            Kg</span
+                                        >
+                                        <span
+                                            class="block text-[10px] text-gray-500"
+                                            >{{ p.total_janjang }} Janjang</span
+                                        >
                                     </div>
                                 </div>
                             </div>
-                            <div v-else class="text-gray-400 text-center py-3">
-                                Belum ada catatan produksi harian untuk blok ini.
+                            <div v-else class="py-3 text-center text-gray-400">
+                                Belum ada catatan produksi harian untuk blok
+                                ini.
                             </div>
                         </div>
 
                         <!-- RIWAYAT VERSI POLIGON (US-06 AC3) -->
-                        <div class="bg-white rounded-xl border border-gray-200 p-4 shadow-xs">
-                            <div class="flex items-center justify-between mb-2">
-                                <h4 class="font-bold text-gray-900">Riwayat Versi Poligon Spasial</h4>
-                                <span class="text-[10px] text-gray-400">Non-Overwriting Records</span>
+                        <div
+                            class="shadow-xs rounded-xl border border-gray-200 bg-white p-4"
+                        >
+                            <div class="mb-2 flex items-center justify-between">
+                                <h4 class="font-bold text-gray-900">
+                                    Riwayat Versi Poligon Spasial
+                                </h4>
+                                <span class="text-[10px] text-gray-400"
+                                    >Non-Overwriting Records</span
+                                >
                             </div>
                             <div class="space-y-1.5 divide-y divide-gray-100">
                                 <div
                                     v-for="v in blockDetail.riwayat_versi"
                                     :key="v.id"
-                                    class="pt-1.5 flex items-center justify-between text-[11px]"
+                                    class="flex items-center justify-between pt-1.5 text-[11px]"
                                 >
                                     <div class="flex items-center gap-1.5">
-                                        <span class="font-mono px-1.5 py-0.5 rounded bg-slate-100 text-slate-800 font-bold">
+                                        <span
+                                            class="rounded bg-slate-100 px-1.5 py-0.5 font-mono font-bold text-slate-800"
+                                        >
                                             v{{ v.versi }}
                                         </span>
-                                        <span class="text-gray-600">Diperbarui: {{ v.diperbarui_pada }}</span>
+                                        <span class="text-gray-600"
+                                            >Diperbarui:
+                                            {{ v.diperbarui_pada }}</span
+                                        >
                                     </div>
-                                    <span class="text-gray-400 text-[10px]">{{ v.created_at }}</span>
+                                    <span class="text-[10px] text-gray-400">{{
+                                        v.created_at
+                                    }}</span>
                                 </div>
                             </div>
                         </div>
                     </div>
 
                     <!-- TAB 2: IMPORT SHAPEFILE / GEOJSON (US-06 AC1, AC2, AC3) -->
-                    <div v-else-if="activeTab === 'import' && canImport" class="space-y-4">
-                        <div class="bg-blue-50 border border-blue-200 rounded-xl p-3.5 text-blue-900">
-                            <h5 class="font-bold mb-1">Panduan Impor Poligon Blok</h5>
+                    <div
+                        v-else-if="activeTab === 'import' && canImport"
+                        class="space-y-4"
+                    >
+                        <div
+                            class="rounded-xl border border-blue-200 bg-blue-50 p-3.5 text-blue-900"
+                        >
+                            <h5 class="mb-1 font-bold">
+                                Panduan Impor Poligon Blok
+                            </h5>
                             <p class="text-[11px] leading-relaxed">
-                                Unggah berkas poligon batas baru dalam format <strong>GeoJSON (.geojson, .json)</strong> atau <strong>ESRI Shapefile (.zip berisi .shp/.dbf/.shx)</strong>.
+                                Unggah berkas poligon batas baru dalam format
+                                <strong>GeoJSON (.geojson, .json)</strong> atau
+                                <strong
+                                    >ESRI Shapefile (.zip berisi
+                                    .shp/.dbf/.shx)</strong
+                                >.
                             </p>
-                            <ul class="list-disc list-inside mt-2 text-[10px] space-y-1 text-blue-800">
-                                <li>Luas hektar (Ha) akan dihitung ulang secara otomatis menggunakan fungsi PostGIS <code class="bg-blue-100 px-1 py-0.5 rounded">ST_Area()</code>.</li>
-                                <li>Sistem memvalidasi tumpang tindih (<code class="bg-blue-100 px-1 py-0.5 rounded">ST_Overlaps</code>). Impor ditolak jika terjadi bentrok batas dengan blok lain.</li>
-                                <li>Tersimpan sebagai versi baru secara permanen (jejak audit tidak menimpa riwayat lama).</li>
+                            <ul
+                                class="mt-2 list-inside list-disc space-y-1 text-[10px] text-blue-800"
+                            >
+                                <li>
+                                    Luas hektar (Ha) akan dihitung ulang secara
+                                    otomatis menggunakan fungsi PostGIS
+                                    <code
+                                        class="rounded bg-blue-100 px-1 py-0.5"
+                                        >ST_Area()</code
+                                    >.
+                                </li>
+                                <li>
+                                    Sistem memvalidasi tumpang tindih (<code
+                                        class="rounded bg-blue-100 px-1 py-0.5"
+                                        >ST_Overlaps</code
+                                    >). Impor ditolak jika terjadi bentrok batas
+                                    dengan blok lain.
+                                </li>
+                                <li>
+                                    Tersimpan sebagai versi baru secara permanen
+                                    (jejak audit tidak menimpa riwayat lama).
+                                </li>
                             </ul>
                         </div>
 
                         <!-- SUCCESS / ERROR ALERTS -->
-                        <div v-if="uploadSuccess" class="p-3 bg-emerald-50 border border-emerald-200 rounded-xl text-emerald-800 font-medium">
+                        <div
+                            v-if="uploadSuccess"
+                            class="rounded-xl border border-emerald-200 bg-emerald-50 p-3 font-medium text-emerald-800"
+                        >
                             {{ uploadSuccess }}
                         </div>
-                        <div v-if="uploadError" class="p-3 bg-rose-50 border border-rose-200 rounded-xl text-rose-800 font-medium">
+                        <div
+                            v-if="uploadError"
+                            class="rounded-xl border border-rose-200 bg-rose-50 p-3 font-medium text-rose-800"
+                        >
                             {{ uploadError }}
                         </div>
 
                         <!-- UPLOAD DROPZONE -->
-                        <div class="border-2 border-dashed border-gray-300 rounded-xl p-6 text-center hover:border-emerald-500 transition-colors">
+                        <div
+                            class="rounded-xl border-2 border-dashed border-gray-300 p-6 text-center transition-colors hover:border-emerald-500"
+                        >
                             <input
                                 type="file"
                                 id="polygonFileInput"
@@ -774,15 +1117,39 @@ onBeforeUnmount(() => {
                                 @change="onFileSelected"
                                 class="hidden"
                             />
-                            <label for="polygonFileInput" class="cursor-pointer flex flex-col items-center">
-                                <svg class="h-10 w-10 text-gray-400 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                            <label
+                                for="polygonFileInput"
+                                class="flex cursor-pointer flex-col items-center"
+                            >
+                                <svg
+                                    class="mb-2 h-10 w-10 text-gray-400"
+                                    fill="none"
+                                    viewBox="0 0 24 24"
+                                    stroke="currentColor"
+                                >
+                                    <path
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                        stroke-width="2"
+                                        d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
+                                    />
                                 </svg>
-                                <span class="font-semibold text-gray-700">Pilih Berkas atau Tarik ke Sini</span>
-                                <span class="text-[10px] text-gray-400 mt-1">Dukungan: GeoJSON (.geojson, .json), Shapefile ZIP (.zip)</span>
+                                <span class="font-semibold text-gray-700"
+                                    >Pilih Berkas atau Tarik ke Sini</span
+                                >
+                                <span class="mt-1 text-[10px] text-gray-400"
+                                    >Dukungan: GeoJSON (.geojson, .json),
+                                    Shapefile ZIP (.zip)</span
+                                >
                             </label>
-                            <div v-if="uploadFile" class="mt-3 p-2 bg-emerald-50 border border-emerald-200 rounded-lg text-emerald-800 font-mono text-[11px]">
-                                Terpilih: {{ uploadFile.name }} ({{ (uploadFile.size / 1024).toFixed(1) }} KB)
+                            <div
+                                v-if="uploadFile"
+                                class="mt-3 rounded-lg border border-emerald-200 bg-emerald-50 p-2 font-mono text-[11px] text-emerald-800"
+                            >
+                                Terpilih: {{ uploadFile.name }} ({{
+                                    (uploadFile.size / 1024).toFixed(1)
+                                }}
+                                KB)
                             </div>
                         </div>
 
@@ -791,10 +1158,17 @@ onBeforeUnmount(() => {
                             type="button"
                             @click="submitPolygonUpload"
                             :disabled="!uploadFile || isUploading"
-                            class="w-full py-2.5 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white font-semibold flex items-center justify-center gap-2 shadow-xs transition-colors"
+                            class="shadow-xs flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 py-2.5 font-semibold text-white transition-colors hover:bg-emerald-700 disabled:opacity-50"
                         >
-                            <span v-if="isUploading" class="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></span>
-                            <span>{{ isUploading ? 'Memvalidasi & Mengimpor...' : 'Proses Impor Poligon Versi Baru' }}</span>
+                            <span
+                                v-if="isUploading"
+                                class="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"
+                            ></span>
+                            <span>{{
+                                isUploading
+                                    ? 'Memvalidasi & Mengimpor...'
+                                    : 'Proses Impor Poligon Versi Baru'
+                            }}</span>
                         </button>
                     </div>
                 </div>

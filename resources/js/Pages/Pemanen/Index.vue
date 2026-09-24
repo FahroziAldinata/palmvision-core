@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
-import { Head, useForm, router } from '@inertiajs/vue3';
+import { Head, router, useForm } from '@inertiajs/vue3';
 import { ref } from 'vue';
 
 interface Pemanen {
@@ -84,7 +84,11 @@ const submitForm = () => {
 };
 
 const deletePemanen = (pemanen: Pemanen) => {
-    if (confirm(`Yakin ingin menghapus data pemanen ${pemanen.nama} (${pemanen.kode_pemanen})?`)) {
+    if (
+        confirm(
+            `Yakin ingin menghapus data pemanen ${pemanen.nama} (${pemanen.kode_pemanen})?`,
+        )
+    ) {
         router.delete(route('pemanen.destroy', pemanen.id));
     }
 };
@@ -97,11 +101,14 @@ const deletePemanen = (pemanen: Pemanen) => {
         <template #header>
             <div class="flex items-center justify-between">
                 <div>
-                    <h2 class="text-xl font-bold leading-tight text-emerald-950 dark:text-emerald-100">
+                    <h2
+                        class="text-xl font-bold leading-tight text-emerald-950 dark:text-emerald-100"
+                    >
                         Master Data Pemanen
                     </h2>
                     <p class="text-xs text-emerald-700 dark:text-emerald-400">
-                        Kelola data pekerja panen per afdeling untuk pencatatan produksi harian
+                        Kelola data pekerja panen per afdeling untuk pencatatan
+                        produksi harian
                     </p>
                 </div>
                 <button
@@ -109,8 +116,18 @@ const deletePemanen = (pemanen: Pemanen) => {
                     @click="openCreateModal"
                     class="inline-flex items-center gap-1.5 rounded-lg bg-emerald-600 px-4 py-2 text-xs font-semibold text-white shadow-sm hover:bg-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 dark:focus:ring-offset-gray-900"
                 >
-                    <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                    <svg
+                        class="h-4 w-4"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                    >
+                        <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M12 4v16m8-8H4"
+                        />
                     </svg>
                     Tambah Pemanen
                 </button>
@@ -118,53 +135,91 @@ const deletePemanen = (pemanen: Pemanen) => {
         </template>
 
         <div class="py-8">
-            <div class="mx-auto max-w-7xl sm:px-6 lg:px-8 space-y-6">
+            <div class="mx-auto max-w-7xl space-y-6 sm:px-6 lg:px-8">
                 <!-- Table Card -->
-                <div class="overflow-hidden rounded-xl border border-emerald-900/10 bg-white shadow-sm dark:border-emerald-500/10 dark:bg-gray-800">
+                <div
+                    class="overflow-hidden rounded-xl border border-emerald-900/10 bg-white shadow-sm dark:border-emerald-500/10 dark:bg-gray-800"
+                >
                     <div class="overflow-x-auto">
-                        <table class="w-full text-left text-sm text-gray-600 dark:text-gray-300">
-                            <thead class="border-b border-gray-100 bg-emerald-50/50 text-xs font-semibold uppercase text-emerald-900 dark:border-gray-700 dark:bg-gray-900/50 dark:text-emerald-300">
+                        <table
+                            class="w-full text-left text-sm text-gray-600 dark:text-gray-300"
+                        >
+                            <thead
+                                class="border-b border-gray-100 bg-emerald-50/50 text-xs font-semibold uppercase text-emerald-900 dark:border-gray-700 dark:bg-gray-900/50 dark:text-emerald-300"
+                            >
                                 <tr>
                                     <th class="px-6 py-3.5">Kode</th>
                                     <th class="px-6 py-3.5">Nama Pemanen</th>
                                     <th class="px-6 py-3.5">Afdeling</th>
                                     <th class="px-6 py-3.5">Status</th>
-                                    <th v-if="canManage" class="px-6 py-3.5 text-right">Aksi</th>
+                                    <th
+                                        v-if="canManage"
+                                        class="px-6 py-3.5 text-right"
+                                    >
+                                        Aksi
+                                    </th>
                                 </tr>
                             </thead>
-                            <tbody class="divide-y divide-gray-100 dark:divide-gray-700/60">
+                            <tbody
+                                class="divide-y divide-gray-100 dark:divide-gray-700/60"
+                            >
                                 <tr
                                     v-for="item in pemanens.data"
                                     :key="item.id"
-                                    class="hover:bg-emerald-50/30 dark:hover:bg-gray-700/30 transition-colors"
+                                    class="transition-colors hover:bg-emerald-50/30 dark:hover:bg-gray-700/30"
                                 >
-                                    <td class="px-6 py-4 font-mono text-xs font-bold text-gray-900 dark:text-gray-100">
+                                    <td
+                                        class="px-6 py-4 font-mono text-xs font-bold text-gray-900 dark:text-gray-100"
+                                    >
                                         {{ item.kode_pemanen }}
                                     </td>
-                                    <td class="px-6 py-4 font-medium text-gray-900 dark:text-gray-100">
+                                    <td
+                                        class="px-6 py-4 font-medium text-gray-900 dark:text-gray-100"
+                                    >
                                         {{ item.nama }}
                                     </td>
-                                    <td class="px-6 py-4 text-xs text-gray-600 dark:text-gray-400">
-                                        <span class="font-medium text-emerald-800 dark:text-emerald-400">{{ item.afdeling?.nama || '-' }}</span>
-                                        <span v-if="item.afdeling?.kebun" class="text-gray-400 dark:text-gray-500"> ({{ item.afdeling.kebun.nama }})</span>
+                                    <td
+                                        class="px-6 py-4 text-xs text-gray-600 dark:text-gray-400"
+                                    >
+                                        <span
+                                            class="font-medium text-emerald-800 dark:text-emerald-400"
+                                            >{{
+                                                item.afdeling?.nama || '-'
+                                            }}</span
+                                        >
+                                        <span
+                                            v-if="item.afdeling?.kebun"
+                                            class="text-gray-400 dark:text-gray-500"
+                                        >
+                                            ({{
+                                                item.afdeling.kebun.nama
+                                            }})</span
+                                        >
                                     </td>
                                     <td class="px-6 py-4">
                                         <span
                                             v-if="item.status === 'aktif'"
                                             class="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-medium text-emerald-800 dark:bg-emerald-900/50 dark:text-emerald-300"
                                         >
-                                            <span class="h-1.5 w-1.5 rounded-full bg-emerald-500"></span>
+                                            <span
+                                                class="h-1.5 w-1.5 rounded-full bg-emerald-500"
+                                            ></span>
                                             Aktif
                                         </span>
                                         <span
                                             v-else
                                             class="inline-flex items-center gap-1 rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-600 dark:bg-gray-800 dark:text-gray-400"
                                         >
-                                            <span class="h-1.5 w-1.5 rounded-full bg-gray-400"></span>
+                                            <span
+                                                class="h-1.5 w-1.5 rounded-full bg-gray-400"
+                                            ></span>
                                             Nonaktif
                                         </span>
                                     </td>
-                                    <td v-if="canManage" class="px-6 py-4 text-right space-x-2">
+                                    <td
+                                        v-if="canManage"
+                                        class="space-x-2 px-6 py-4 text-right"
+                                    >
                                         <button
                                             @click="openEditModal(item)"
                                             class="text-xs font-semibold text-emerald-600 hover:text-emerald-700 dark:text-emerald-400 dark:hover:text-emerald-300"
@@ -180,7 +235,10 @@ const deletePemanen = (pemanen: Pemanen) => {
                                     </td>
                                 </tr>
                                 <tr v-if="pemanens.data.length === 0">
-                                    <td colspan="5" class="px-6 py-12 text-center text-sm text-gray-500 dark:text-gray-400">
+                                    <td
+                                        colspan="5"
+                                        class="px-6 py-12 text-center text-sm text-gray-500 dark:text-gray-400"
+                                    >
                                         Belum ada data pemanen yang terdaftar.
                                     </td>
                                 </tr>
@@ -194,58 +252,97 @@ const deletePemanen = (pemanen: Pemanen) => {
         <!-- Modal Create / Edit -->
         <div
             v-if="showModal"
-            class="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/50 backdrop-blur-sm p-4"
+            class="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/50 p-4 backdrop-blur-sm"
         >
-            <div class="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl dark:bg-gray-800 border border-gray-100 dark:border-gray-700">
-                <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-4">
-                    {{ editingPemanen ? 'Edit Data Pemanen' : 'Tambah Pemanen Baru' }}
+            <div
+                class="w-full max-w-md rounded-2xl border border-gray-100 bg-white p-6 shadow-xl dark:border-gray-700 dark:bg-gray-800"
+            >
+                <h3
+                    class="mb-4 text-lg font-bold text-gray-900 dark:text-white"
+                >
+                    {{
+                        editingPemanen
+                            ? 'Edit Data Pemanen'
+                            : 'Tambah Pemanen Baru'
+                    }}
                 </h3>
 
                 <form @submit.prevent="submitForm" class="space-y-4">
                     <div v-if="!editingPemanen && afdelings.length > 1">
-                        <label class="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">Afdeling</label>
+                        <label
+                            class="mb-1 block text-xs font-semibold text-gray-700 dark:text-gray-300"
+                            >Afdeling</label
+                        >
                         <select
                             v-model="form.afdeling_id"
-                            class="w-full rounded-lg border-gray-300 dark:border-gray-700 dark:bg-gray-900 text-sm focus:border-emerald-500 focus:ring-emerald-500"
+                            class="w-full rounded-lg border-gray-300 text-sm focus:border-emerald-500 focus:ring-emerald-500 dark:border-gray-700 dark:bg-gray-900"
                             required
                         >
                             <option value="" disabled>Pilih Afdeling</option>
-                            <option v-for="afd in afdelings" :key="afd.id" :value="afd.id">
+                            <option
+                                v-for="afd in afdelings"
+                                :key="afd.id"
+                                :value="afd.id"
+                            >
                                 {{ afd.nama }} ({{ afd.kode }})
                             </option>
                         </select>
-                        <p v-if="form.errors.afdeling_id" class="text-xs text-rose-600 mt-1">{{ form.errors.afdeling_id }}</p>
+                        <p
+                            v-if="form.errors.afdeling_id"
+                            class="mt-1 text-xs text-rose-600"
+                        >
+                            {{ form.errors.afdeling_id }}
+                        </p>
                     </div>
 
                     <div>
-                        <label class="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">Nama Pemanen</label>
+                        <label
+                            class="mb-1 block text-xs font-semibold text-gray-700 dark:text-gray-300"
+                            >Nama Pemanen</label
+                        >
                         <input
                             v-model="form.nama"
                             type="text"
                             placeholder="Contoh: Supriyadi"
-                            class="w-full rounded-lg border-gray-300 dark:border-gray-700 dark:bg-gray-900 text-sm focus:border-emerald-500 focus:ring-emerald-500"
+                            class="w-full rounded-lg border-gray-300 text-sm focus:border-emerald-500 focus:ring-emerald-500 dark:border-gray-700 dark:bg-gray-900"
                             required
                         />
-                        <p v-if="form.errors.nama" class="text-xs text-rose-600 mt-1">{{ form.errors.nama }}</p>
+                        <p
+                            v-if="form.errors.nama"
+                            class="mt-1 text-xs text-rose-600"
+                        >
+                            {{ form.errors.nama }}
+                        </p>
                     </div>
 
                     <div>
-                        <label class="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">Kode Pemanen</label>
+                        <label
+                            class="mb-1 block text-xs font-semibold text-gray-700 dark:text-gray-300"
+                            >Kode Pemanen</label
+                        >
                         <input
                             v-model="form.kode_pemanen"
                             type="text"
                             placeholder="Contoh: PMN-01"
-                            class="w-full rounded-lg border-gray-300 dark:border-gray-700 dark:bg-gray-900 text-sm focus:border-emerald-500 focus:ring-emerald-500 uppercase font-mono"
+                            class="w-full rounded-lg border-gray-300 font-mono text-sm uppercase focus:border-emerald-500 focus:ring-emerald-500 dark:border-gray-700 dark:bg-gray-900"
                             required
                         />
-                        <p v-if="form.errors.kode_pemanen" class="text-xs text-rose-600 mt-1">{{ form.errors.kode_pemanen }}</p>
+                        <p
+                            v-if="form.errors.kode_pemanen"
+                            class="mt-1 text-xs text-rose-600"
+                        >
+                            {{ form.errors.kode_pemanen }}
+                        </p>
                     </div>
 
                     <div>
-                        <label class="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">Status</label>
+                        <label
+                            class="mb-1 block text-xs font-semibold text-gray-700 dark:text-gray-300"
+                            >Status</label
+                        >
                         <select
                             v-model="form.status"
-                            class="w-full rounded-lg border-gray-300 dark:border-gray-700 dark:bg-gray-900 text-sm focus:border-emerald-500 focus:ring-emerald-500"
+                            class="w-full rounded-lg border-gray-300 text-sm focus:border-emerald-500 focus:ring-emerald-500 dark:border-gray-700 dark:bg-gray-900"
                         >
                             <option value="aktif">Aktif</option>
                             <option value="nonaktif">Nonaktif</option>

@@ -66,60 +66,81 @@ const downloadExcel = () => {
         <template #header>
             <div class="flex items-center justify-between">
                 <div>
-                    <h2 class="text-xl font-bold leading-tight text-emerald-950 dark:text-emerald-100">
+                    <h2
+                        class="text-xl font-bold leading-tight text-emerald-950 dark:text-emerald-100"
+                    >
                         Laporan Produksi Bulanan
                     </h2>
                     <p class="text-xs text-emerald-700 dark:text-emerald-400">
-                        Cetak dokumen resmi PDF ber-kop surat atau unduh data tabular Excel untuk rekapitulasi kebun
+                        Cetak dokumen resmi PDF ber-kop surat atau unduh data
+                        tabular Excel untuk rekapitulasi kebun
                     </p>
                 </div>
             </div>
         </template>
 
         <div class="py-8">
-            <div class="mx-auto max-w-4xl sm:px-6 lg:px-8 space-y-6">
+            <div class="mx-auto max-w-4xl space-y-6 sm:px-6 lg:px-8">
                 <!-- Filter & Generator Card -->
-                <div class="rounded-2xl border border-emerald-900/10 bg-white p-6 shadow-sm dark:border-emerald-500/10 dark:bg-gray-800 space-y-6">
-                    <h3 class="text-sm font-bold uppercase tracking-wider text-emerald-900 dark:text-emerald-300">
+                <div
+                    class="space-y-6 rounded-2xl border border-emerald-900/10 bg-white p-6 shadow-sm dark:border-emerald-500/10 dark:bg-gray-800"
+                >
+                    <h3
+                        class="text-sm font-bold uppercase tracking-wider text-emerald-900 dark:text-emerald-300"
+                    >
                         Parameter Laporan Bulanan
                     </h3>
 
-                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
                         <div>
-                            <label class="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">
+                            <label
+                                class="mb-1 block text-xs font-semibold text-gray-700 dark:text-gray-300"
+                            >
                                 Kebun
                             </label>
                             <select
                                 v-model="selectedKebunId"
-                                class="w-full rounded-lg border-gray-300 dark:border-gray-700 dark:bg-gray-900 text-sm focus:border-emerald-500 focus:ring-emerald-500"
+                                class="w-full rounded-lg border-gray-300 text-sm focus:border-emerald-500 focus:ring-emerald-500 dark:border-gray-700 dark:bg-gray-900"
                             >
-                                <option v-for="k in kebuns" :key="k.id" :value="k.id">
+                                <option
+                                    v-for="k in kebuns"
+                                    :key="k.id"
+                                    :value="k.id"
+                                >
                                     {{ k.nama }} ({{ k.kode_kebun }})
                                 </option>
                             </select>
                         </div>
 
                         <div>
-                            <label class="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">
+                            <label
+                                class="mb-1 block text-xs font-semibold text-gray-700 dark:text-gray-300"
+                            >
                                 Periode Bulan
                             </label>
                             <select
                                 v-model.number="selectedBulan"
-                                class="w-full rounded-lg border-gray-300 dark:border-gray-700 dark:bg-gray-900 text-sm focus:border-emerald-500 focus:ring-emerald-500"
+                                class="w-full rounded-lg border-gray-300 text-sm focus:border-emerald-500 focus:ring-emerald-500 dark:border-gray-700 dark:bg-gray-900"
                             >
-                                <option v-for="m in months" :key="m.value" :value="m.value">
+                                <option
+                                    v-for="m in months"
+                                    :key="m.value"
+                                    :value="m.value"
+                                >
                                     {{ m.label }}
                                 </option>
                             </select>
                         </div>
 
                         <div>
-                            <label class="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">
+                            <label
+                                class="mb-1 block text-xs font-semibold text-gray-700 dark:text-gray-300"
+                            >
                                 Tahun
                             </label>
                             <select
                                 v-model.number="selectedTahun"
-                                class="w-full rounded-lg border-gray-300 dark:border-gray-700 dark:bg-gray-900 text-sm focus:border-emerald-500 focus:ring-emerald-500"
+                                class="w-full rounded-lg border-gray-300 text-sm focus:border-emerald-500 focus:ring-emerald-500 dark:border-gray-700 dark:bg-gray-900"
                             >
                                 <option :value="2025">2025</option>
                                 <option :value="2026">2026</option>
@@ -129,14 +150,26 @@ const downloadExcel = () => {
                     </div>
 
                     <!-- Download Buttons -->
-                    <div class="pt-4 border-t border-gray-100 dark:border-gray-700 flex flex-col sm:flex-row items-center gap-4">
+                    <div
+                        class="flex flex-col items-center gap-4 border-t border-gray-100 pt-4 sm:flex-row dark:border-gray-700"
+                    >
                         <button
                             type="button"
                             @click="downloadPdf"
-                            class="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-600 px-6 py-3 text-sm font-semibold text-white shadow-sm hover:bg-emerald-500 transition-colors"
+                            class="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 px-6 py-3 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-emerald-500 sm:w-auto"
                         >
-                            <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                            <svg
+                                class="h-5 w-5"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                stroke="currentColor"
+                            >
+                                <path
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    stroke-width="2"
+                                    d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"
+                                />
                             </svg>
                             Unduh Laporan PDF (Gotenberg)
                         </button>
@@ -144,10 +177,20 @@ const downloadExcel = () => {
                         <button
                             type="button"
                             @click="downloadExcel"
-                            class="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-xl border border-emerald-600 bg-emerald-50 px-6 py-3 text-sm font-semibold text-emerald-800 hover:bg-emerald-100 transition-colors dark:bg-emerald-950/40 dark:text-emerald-300"
+                            class="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-emerald-600 bg-emerald-50 px-6 py-3 text-sm font-semibold text-emerald-800 transition-colors hover:bg-emerald-100 sm:w-auto dark:bg-emerald-950/40 dark:text-emerald-300"
                         >
-                            <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                            <svg
+                                class="h-5 w-5"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                stroke="currentColor"
+                            >
+                                <path
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    stroke-width="2"
+                                    d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                                />
                             </svg>
                             Unduh Data Excel (CSV)
                         </button>
@@ -155,28 +198,66 @@ const downloadExcel = () => {
                 </div>
 
                 <!-- Feature Description Card -->
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm dark:border-gray-700 dark:bg-gray-800 space-y-2">
-                        <div class="flex items-center gap-2 text-emerald-700 dark:text-emerald-400 font-bold text-sm">
-                            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                    <div
+                        class="space-y-2 rounded-xl border border-gray-200 bg-white p-5 shadow-sm dark:border-gray-700 dark:bg-gray-800"
+                    >
+                        <div
+                            class="flex items-center gap-2 text-sm font-bold text-emerald-700 dark:text-emerald-400"
+                        >
+                            <svg
+                                class="h-4 w-4"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                stroke="currentColor"
+                            >
+                                <path
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    stroke-width="2"
+                                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                                />
                             </svg>
                             Format PDF Standar Resmi
                         </div>
-                        <p class="text-xs text-gray-600 dark:text-gray-400 leading-relaxed">
-                            Dilengkapi kop surat holding dan kebun, tabel rekapitulasi komparasi taksasi vs realisasi per blok, serta blok tanda tangan pengesahan Asisten Afdeling dan Manajer Kebun / ADM.
+                        <p
+                            class="text-xs leading-relaxed text-gray-600 dark:text-gray-400"
+                        >
+                            Dilengkapi kop surat holding dan kebun, tabel
+                            rekapitulasi komparasi taksasi vs realisasi per
+                            blok, serta blok tanda tangan pengesahan Asisten
+                            Afdeling dan Manajer Kebun / ADM.
                         </p>
                     </div>
 
-                    <div class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm dark:border-gray-700 dark:bg-gray-800 space-y-2">
-                        <div class="flex items-center gap-2 text-emerald-700 dark:text-emerald-400 font-bold text-sm">
-                            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    <div
+                        class="space-y-2 rounded-xl border border-gray-200 bg-white p-5 shadow-sm dark:border-gray-700 dark:bg-gray-800"
+                    >
+                        <div
+                            class="flex items-center gap-2 text-sm font-bold text-emerald-700 dark:text-emerald-400"
+                        >
+                            <svg
+                                class="h-4 w-4"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                stroke="currentColor"
+                            >
+                                <path
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    stroke-width="2"
+                                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                                />
                             </svg>
                             Format Excel Siap Olah
                         </div>
-                        <p class="text-xs text-gray-600 dark:text-gray-400 leading-relaxed">
-                            Format tabular CSV UTF-8 dengan pemisah standar tanpa distorsi formula untuk kemudahan integrasi dengan analisis lanjutan atau spreadsheet tim operasional.
+                        <p
+                            class="text-xs leading-relaxed text-gray-600 dark:text-gray-400"
+                        >
+                            Format tabular CSV UTF-8 dengan pemisah standar
+                            tanpa distorsi formula untuk kemudahan integrasi
+                            dengan analisis lanjutan atau spreadsheet tim
+                            operasional.
                         </p>
                     </div>
                 </div>
