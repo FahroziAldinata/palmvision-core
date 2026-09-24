@@ -67,6 +67,12 @@ const showingNavigationDropdown = ref(false);
                                 >
                                     Laporan
                                 </NavLink>
+                                <NavLink
+                                    :href="route('gis.index')"
+                                    :active="route().current('gis.*')"
+                                >
+                                    Peta GIS
+                                </NavLink>
                             </div>
                         </div>
 
@@ -173,6 +179,12 @@ const showingNavigationDropdown = ref(false);
                             :active="route().current('dashboard')"
                         >
                             Dashboard
+                        </ResponsiveNavLink>
+                        <ResponsiveNavLink
+                            :href="route('gis.index')"
+                            :active="route().current('gis.*')"
+                        >
+                            Peta GIS
                         </ResponsiveNavLink>
                     </div>
 

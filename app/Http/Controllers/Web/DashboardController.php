@@ -10,13 +10,17 @@ use App\Domain\Produksi\Models\ProduksiHarianDetail;
 use App\Domain\Taksasi\Models\Taksasi;
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Services\GisMapService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class DashboardController extends Controller
 {
+    public function __construct(
+        protected GisMapService $gisMapService
+    ) {}
+
     /**
      * Handle the incoming request.
      */
@@ -289,54 +293,6 @@ class DashboardController extends Controller
      */
     protected function buildGeoJson(?string $kebunId = null, ?string $afdelingId = null): array
     {
-        $query = DB::table('poligon_blok')
-            ->join('blok', 'blok.id', '=', 'poligon_blok.blok_id')
-            ->join('afdeling', 'afdeling.id', '=', 'blok.afdeling_id')
-            ->join('kebun', 'kebun.id', '=', 'afdeling.kebun_id')
-            ->whereNull('blok.deleted_at')
-            ->select([
-                'blok.id as blok_id',
-                'blok.kode_blok',
-                'blok.luas_ha',
-                'blok.kategori_tanah',
-                'blok.jumlah_pokok',
-                'afdeling.nama as afdeling_nama',
-                'kebun.nama as kebun_nama',
-                DB::raw('ST_AsGeoJSON(poligon_blok.poligon) as geojson'),
-            ]);
-
-        if ($afdelingId) {
-            $query->where('afdeling.id', $afdelingId);
-        } elseif ($kebunId) {
-            $query->where('kebun.id', $kebunId);
-        }
-
-        $records = $query->get();
-
-        $features = [];
-        foreach ($records as $row) {
-            if (! $row->geojson) {
-                continue;
-            }
-
-            $features[] = [
-                'type' => 'Feature',
-                'properties' => [
-                    'blok_id' => $row->blok_id,
-                    'kode_blok' => $row->kode_blok,
-                    'luas_ha' => (float) $row->luas_ha,
-                    'kategori_tanah' => $row->kategori_tanah,
-                    'jumlah_pokok' => $row->jumlah_pokok,
-                    'afdeling_nama' => $row->afdeling_nama,
-                    'kebun_nama' => $row->kebun_nama,
-                ],
-                'geometry' => json_decode($row->geojson, true),
-            ];
-        }
-
-        return [
-            'type' => 'FeatureCollection',
-            'features' => $features,
-        ];
+        return $this->gisMapService->getGeoJsonFeatures($kebunId, $afdelingId);
     }
 }
