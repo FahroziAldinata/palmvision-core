@@ -23,7 +23,18 @@ class Kebun extends Model
         'kode_kebun',
         'nama',
         'koordinat_pusat',
+        'siklus_rotasi_hari',
     ];
+
+    /**
+     * @return array<string, string>
+     */
+    protected function casts(): array
+    {
+        return [
+            'siklus_rotasi_hari' => 'integer',
+        ];
+    }
 
     /**
      * @return BelongsTo<GrupPerusahaan, $this>
