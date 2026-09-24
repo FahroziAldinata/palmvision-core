@@ -44,4 +44,27 @@ class BlokPolicy
 
         return false;
     }
+
+    /**
+     * Determine whether the user can import/update polygon for the blok.
+     */
+    public function updatePoligon(User $user, Blok $blok): bool
+    {
+        if ($user->hasRole('admin_it')) {
+            return true;
+        }
+
+        if (! $user->hasRole('tim_gis')) {
+            return false;
+        }
+
+        // If user is scoped to a specific kebun, enforce it
+        if ($user->kebun_id !== null) {
+            $blok->loadMissing('afdeling');
+
+            return $blok->afdeling !== null && $user->kebun_id === $blok->afdeling->kebun_id;
+        }
+
+        return true;
+    }
 }
