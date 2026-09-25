@@ -286,3 +286,41 @@ test('dashboard view provides forecasting overview and renders PRD 11.5 disclaim
             ->where('forecasting.rata_rata_mape', 0.095)
         );
 });
+
+test('different blocks produce distinct non-identical forecast projections and MAPE', function () {
+    $this->seed(ForecastingHistoricalSeeder::class);
+
+    $user = User::where('email', 'direksi@palmvision.test')->firstOrFail();
+    $blokA = Blok::where('kode_blok', 'A01')->firstOrFail();
+    $blokB = Blok::where('kode_blok', 'A02')->firstOrFail();
+
+    // Retrain kedua blok secara independen
+    $this->artisan("forecast:retrain --blok={$blokA->kode_blok}")->assertSuccessful();
+    $this->artisan("forecast:retrain --blok={$blokB->kode_blok}")->assertSuccessful();
+
+    $resA = $this->actingAs($user)->getJson("/api/v1/forecast/{$blokA->id}")->assertOk()->json();
+    $resB = $this->actingAs($user)->getJson("/api/v1/forecast/{$blokB->id}")->assertOk()->json();
+
+    // Verifikasi kedua blok menghasilkan proyeksi terisi
+    expect($resA['proyeksi'])->not->toBeEmpty()
+        ->and($resB['proyeksi'])->not->toBeEmpty();
+
+    $valA = $resA['proyeksi'][0]['nilai_kg'];
+    $valB = $resB['proyeksi'][0]['nilai_kg'];
+
+    // Nilai kg antar blok berbeda (bukan stub flat)
+    expect($valA)->not->toEqual($valB)
+        ->and($valA)->not->toEqual(18420.0)
+        ->and($valB)->not->toEqual(18420.0);
+
+    // Interval atas dan bawah memayungi nilai prediksi
+    expect($resA['proyeksi'][0]['interval_bawah'])->toBeLessThanOrEqual($valA)
+        ->and($resA['proyeksi'][0]['interval_atas'])->toBeGreaterThanOrEqual($valA)
+        ->and($resB['proyeksi'][0]['interval_bawah'])->toBeLessThanOrEqual($valB)
+        ->and($resB['proyeksi'][0]['interval_atas'])->toBeGreaterThanOrEqual($valB);
+
+    // MAPE realistis dan tidak identik antar blok
+    expect($resA['mape_model'])->toBeGreaterThan(0)
+        ->and($resB['mape_model'])->toBeGreaterThan(0)
+        ->and($resA['mape_model'])->not->toEqual($resB['mape_model']);
+});
