@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import BaseMap from '@/Components/BaseMap.vue';
+import ForecastingSection from '@/Components/ForecastingSection.vue';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head } from '@inertiajs/vue3';
 
@@ -29,7 +30,7 @@ interface BlokItem {
     kategori_tanah: string;
 }
 
-const props = defineProps<{
+defineProps<{
     role: string;
     title: string;
     message?: string;
@@ -45,6 +46,7 @@ const props = defineProps<{
     afdelings?: AfdelingItem[];
     bloks?: BlokItem[];
     geoJson?: any | null;
+    forecasting?: any | null;
 }>();
 
 const formatRoleName = (role: string) => {
@@ -429,6 +431,15 @@ const formatRoleName = (role: string) => {
                             {{ summary.total_janjang_hari_ini || 0 }} Janjang
                         </p>
                     </div>
+                </div>
+
+                <!-- 1.2 FORECASTING AI SECTION (TAHAP 4 EXTENSION) -->
+                <div v-if="['direksi', 'manajer_kebun'].includes(role)">
+                    <ForecastingSection
+                        :forecasting="forecasting"
+                        :role="role"
+                        :kebun-id="kebun?.id"
+                    />
                 </div>
 
                 <!-- 2. PLACEHOLDER / NOTICE FOR ADMIN IT OR OTHER ROLES -->

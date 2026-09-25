@@ -1,17 +1,15 @@
 # PALMVISION — Plantation Monitoring System
 
-> **Status Proyek: Tahap 3 (Visualisasi Spasial Penuh GIS, Vector Tile Server, Import Batas Lahan) — SELESAI**  
-> Repositori saat ini telah menyelesaikan **Tahap 3**. Telah terimplementasi modul:
-> 1. Import Poligon Batas Blok: Mendukung berkas GeoJSON (`.geojson`, `.json`) dan ESRI Shapefile (`.zip`, `.shp`) berbasis parser pure-PHP (`gasparesganga/php-shapefile`).
-> 2. Perhitungan Luas Area Otomatis: Dihitung secara presisi via PostGIS `ST_Area(poligon::geography) / 10000` dan memperbarui `blok.luas_ha`.
-> 3. Validasi Kualitas GIS & Overlap Detection: Mendeteksi tumpang tindih batas lahan antar blok (`ST_Overlaps`) sebelum disimpan dan menolak dengan pesan jelas.
-> 4. Non-Overwriting Version History: Penyimpanan poligon baru meng-increment kolom `versi` secara permanen untuk audit jejak perubahan lahan.
-> 5. Vector Tile Server (`pg_tileserv`): Microservice MVT di port internal `7800` terproteksi melalui Laravel Authenticated Proxy (`/gis/tiles/{z}/{x}/{y}.pbf`) dengan scoping hierarki organisasi.
-> 6. Ambang Batas 3 Tingkat Warna Status Produktivitas (ADR 0010): Hijau (≤ 5%), Kuning (5–15%), Merah (> 15%), dan Netral/Abu-abu.
-> 7. Panel Detail Blok Interaktif (US-05 AC2): Klik poligon membuka panel ringkasan produksi 5 panen terakhir, taksasi terakhir, usia tanaman (tahun + bulan), tanggal rotasi panen berikutnya (pola 8/10 standar kebun sawit), dan riwayat versi GIS.
-> 8. Filter Reaktif Peta: Filter dinamis per afdeling, per warna status produktivitas, dan rentang tanggal rotasi panen.
-> 9. Strategi Render Dual-Mode Adaptif & Benchmark 1 Kebun Penuh (250 Blok, PRD Bagian 15): Otomatis menggunakan GeoJSON untuk ≤50 blok dan Vector Tile (`pg_tileserv`) untuk skala ratusan blok (>50 blok), menghasilkan reduksi payload hingga 47.7x (3.63 KB vs 173.25 KB).
-> Seluruh 70 unit & feature tests lulus 100% (442 assertions). Pint dan Larastan Level 6 bersih 0 error.
+> **Status Proyek: Tahap 4 (Forecasting Produksi: Prophet, Open-Meteo Rainfall, Model Registry & Dashboard Proyeksi) — SELESAI**  
+> Repositori saat ini telah menyelesaikan **Tahap 4**. Telah terimplementasi modul:
+> 1. Integrasi Curah Hujan Open-Meteo: Fetch historis harian dari Open-Meteo Archive API berbasis koordinat pusat kebun (`curah_hujan` table), ter-cache permanen di database tanpa pemanggilan live berulang.
+> 2. Seeder Historis Sintetis Terisolasi (`ForecastingHistoricalSeeder`): 18 bulan histori produksi sawit berfluktuasi musiman realistis (peak crop Okt-Des, trek Feb-Apr), taksasi berkorelasi wajar, dan curah hujan selaras untuk portofolio demo.
+> 3. Pipeline Model Time-Series Prophet (`palmvision-forecasting`): Model Meta Prophet per blok dengan regressor eksternal (curah hujan historis, usia tanaman, kategori tanah), seasonal adaptif, model registry (`storage/model_registry/{blok_id}/`), dan backtesting MAPE otomatis menjaga kontrak API `/api/v1/forecast`.
+> 4. Penyimpanan Hasil & Jejak Audit (Aturan D5 PRD 7.2): Tabel `forecast_result` mencatat proyeksi, interval bawah/atas, `mape_model`, dan `versi_model` secara non-overwriting (riwayat lama tidak terhapus saat retraining).
+> 5. Antrean Asinkronus Horizon: `POST /api/v1/forecast/generate` menjadwalkan `GenerateForecastJob` ke queue Horizon tanpa memblokir request HTTP.
+> 6. Retraining Bulanan & Manual Trigger: `php artisan forecast:retrain` (dengan opsi `--queue`, `--kebun`, `--blok`) terjadwal otomatis setiap tanggal 1 awal bulan via Laravel Scheduler.
+> 7. Dashboard Eksekutif & Manajer Kebun: Komponen `ForecastingSection.vue` interaktif dengan kartu proyeksi 3 bulan ke depan, interval kepercayaan 80%, skor akurasi MAPE transparan, dan penafian wajib PRD 11.5.
+> Seluruh 81 Pest tests di `palmvision-core` dan 6 Pytest di `palmvision-forecasting` lulus 100%. Pint, Larastan Level 6, ESLint, dan Ruff bersih 0 error.
 
 ---
 
@@ -165,6 +163,6 @@ Dijalankan secara otomatis melalui `GisPerformanceTest.php` dengan dataset 250 b
 | **Phase 0** | **Project Setup, Multi-Service Scaffolding, PostGIS, Quality Gates & CI** | **SELESAI** |
 | **Tahap 1** | **Fondasi Organisasi (Grup, Kebun, Afdeling, Blok), Spasial Poligon, RBAC & Dashboard Leaflet** | **SELESAI** |
 | **Tahap 2** | **Modul Bisnis: Produksi Harian (Pemanen), Taksasi Panen, Validasi Berjenjang, Laporan On-Demand** | **SELESAI** |
-| **Tahap 3** | **Visualisasi Spasial Penuh GIS (Import GeoJSON & Shapefile, pg_tileserv, Status Deviasi 3-Warna, Filter Reaktif)** | **SELESAI (Current)** |
-| **Tahap 4** | Machine Learning Forecasting (Integrasi Model Prophet/SARIMA di Python) | Mendatang |
+| **Tahap 3** | **Visualisasi Spasial Penuh GIS (Import GeoJSON & Shapefile, pg_tileserv, Status Deviasi 3-Warna, Filter Reaktif)** | **SELESAI** |
+| **Tahap 4** | **Machine Learning Forecasting (Prophet, Open-Meteo, Horizon Queue, Model Registry, Dashboard Proyeksi)** | **SELESAI (Current)** |
 | **Tahap 5** | PWA Mobile Offline-First untuk Mandor & Kerani Lapangan, Notifikasi & Webhook | Mendatang |

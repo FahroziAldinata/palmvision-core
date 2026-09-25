@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Web;
 
+use App\Domain\Forecasting\Models\ForecastResult;
 use App\Domain\Organisasi\Models\Afdeling;
 use App\Domain\Organisasi\Models\Blok;
 use App\Domain\Organisasi\Models\Kebun;
@@ -11,6 +12,7 @@ use App\Domain\Taksasi\Models\Taksasi;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Services\GisMapService;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -97,6 +99,7 @@ class DashboardController extends Controller
             ],
             'kebuns' => $kebuns,
             'geoJson' => $geoJson,
+            'forecasting' => $this->getForecastingOverview(),
         ]);
     }
 
@@ -165,6 +168,7 @@ class DashboardController extends Controller
             ],
             'afdelings' => $afdelings,
             'geoJson' => $geoJson,
+            'forecasting' => $this->getForecastingOverview($kebun?->id),
         ]);
     }
 
@@ -294,5 +298,68 @@ class DashboardController extends Controller
     protected function buildGeoJson(?string $kebunId = null, ?string $afdelingId = null): array
     {
         return $this->gisMapService->getGeoJsonFeatures($kebunId, $afdelingId);
+    }
+
+    /**
+     * Ambil data ringkasan proyeksi forecasting untuk dashboard.
+     *
+     * @return array<string, mixed>
+     */
+    protected function getForecastingOverview(?string $kebunId = null): array
+    {
+        $query = ForecastResult::with('blok.afdeling.kebun');
+
+        if ($kebunId) {
+            $query->whereHas('blok.afdeling', fn ($q) => $q->where('kebun_id', $kebunId));
+        }
+
+        $allResults = $query->orderBy('periode')->get();
+
+        if ($allResults->isEmpty()) {
+            return [
+                'has_data' => false,
+                'forecasts' => [],
+                'rata_rata_mape' => null,
+                'versi_terbaru' => null,
+            ];
+        }
+
+        $grouped = $allResults->groupBy('blok_id')->map(function ($items) {
+            /** @var ForecastResult $latestItem */
+            $latestItem = $items->sortByDesc('created_at')->first();
+            $versi = $latestItem->versi_model;
+
+            $batchItems = $items->where('versi_model', $versi)->sortBy('periode')->values();
+            /** @var ForecastResult $first */
+            $first = $batchItems->first();
+
+            $afdeling = $first->blok->afdeling;
+            $kebun = $afdeling?->kebun;
+
+            return [
+                'blok_id' => $first->blok_id,
+                'kode_blok' => $first->blok->kode_blok,
+                'kebun_nama' => $kebun ? $kebun->nama : '-',
+                'afdeling_kode' => $afdeling ? $afdeling->kode : '-',
+                'mape_model' => (float) $first->mape_model,
+                'versi_model' => (string) $first->versi_model,
+                'proyeksi' => $batchItems->map(fn ($b) => [
+                    'periode' => Carbon::parse($b->periode)->format('Y-m'),
+                    'nilai_kg' => (float) $b->nilai_kg,
+                    'interval_bawah' => (float) $b->interval_bawah,
+                    'interval_atas' => (float) $b->interval_atas,
+                ])->values()->all(),
+            ];
+        })->values();
+
+        $avgMape = $grouped->avg('mape_model');
+        $latestVersion = $grouped->first()['versi_model'] ?? null;
+
+        return [
+            'has_data' => true,
+            'forecasts' => $grouped->all(),
+            'rata_rata_mape' => $avgMape !== null ? round((float) $avgMape, 4) : null,
+            'versi_terbaru' => $latestVersion,
+        ];
     }
 }
