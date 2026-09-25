@@ -91,6 +91,7 @@ class RetrainForecastCommand extends Command
 
         $this->info('Mode sinkronus aktif. Memproses data langsung...');
         $tableData = [];
+        $hasError = false;
 
         foreach ($bloks as $blok) {
             $this->line("Memproses Blok <comment>{$blok->kode_blok}</comment>...");
@@ -107,6 +108,7 @@ class RetrainForecastCommand extends Command
                     'mape_model' => $first ? number_format((float) $first->mape_model * 100, 2).'%' : '-',
                 ];
             } catch (\Throwable $e) {
+                $hasError = true;
                 $this->error("Gagal pada Blok {$blok->kode_blok}: ".$e->getMessage());
                 $tableData[] = [
                     'kode_blok' => $blok->kode_blok,
@@ -126,6 +128,6 @@ class RetrainForecastCommand extends Command
 
         $this->info('Proses retraining selesai.');
 
-        return self::SUCCESS;
+        return $hasError ? self::FAILURE : self::SUCCESS;
     }
 }

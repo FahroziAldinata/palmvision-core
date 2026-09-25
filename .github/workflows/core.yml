@@ -84,6 +84,25 @@ jobs:
           npm ci
           npm run build
 
+      - name: Checkout Forecasting Service
+        uses: actions/checkout@v4
+        with:
+          repository: FahroziAldinata/palmvision-forecasting
+          path: /tmp/palmvision-forecasting
+
+      - name: Build & Run Forecasting Service
+        run: |
+          docker build -t palmvision-forecasting /tmp/palmvision-forecasting
+          docker run -d --name forecasting -p 8000:8000 -e API_KEY=palmvision-dev-key palmvision-forecasting
+          for i in {1..30}; do
+            if curl -s http://127.0.0.1:8000/health | grep -q "ok"; then
+              echo "Forecasting service is ready!"
+              break
+            fi
+            echo "Waiting for forecasting service... ($i/30)"
+            sleep 1
+          done
+
       - name: Run Database Migrations
         env:
           DB_CONNECTION: pgsql
@@ -108,4 +127,6 @@ jobs:
           REDIS_PORT: 6379
           GOTENBERG_URL: http://127.0.0.1:3000
           TILESERV_URL: http://127.0.0.1:7800
+          FORECASTING_URL: http://127.0.0.1:8000
+          FORECASTING_API_KEY: palmvision-dev-key
         run: php artisan test --exclude-group=external
