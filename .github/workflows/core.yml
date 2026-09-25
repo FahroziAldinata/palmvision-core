@@ -84,14 +84,9 @@ jobs:
           npm ci
           npm run build
 
-      - name: Checkout Forecasting Service
-        uses: actions/checkout@v4
-        with:
-          repository: FahroziAldinata/palmvision-forecasting
-          path: /tmp/palmvision-forecasting
-
       - name: Build & Run Forecasting Service
         run: |
+          git clone --depth 1 https://github.com/FahroziAldinata/palmvision-forecasting.git /tmp/palmvision-forecasting
           docker build -t palmvision-forecasting /tmp/palmvision-forecasting
           docker run -d --name forecasting -p 8000:8000 -e API_KEY=palmvision-dev-key palmvision-forecasting
           for i in {1..30}; do
