@@ -78,12 +78,85 @@ const showingNavigationDropdown = ref(false);
                                 >
                                     Peta GIS
                                 </NavLink>
+                                <NavLink
+                                    :href="route('pemupukan.index')"
+                                    :active="route().current('pemupukan.*')"
+                                >
+                                    Pemupukan
+                                </NavLink>
                             </div>
                         </div>
 
-                        <div class="hidden sm:ms-6 sm:flex sm:items-center">
+                        <div class="hidden sm:ms-6 sm:flex sm:items-center gap-3">
+                            <!-- Notification Bell Dropdown -->
+                            <div class="relative">
+                                <Dropdown align="right" width="80">
+                                    <template #trigger>
+                                        <button
+                                            type="button"
+                                            class="relative rounded-full p-1.5 text-gray-500 hover:bg-gray-100 hover:text-gray-700 focus:outline-none"
+                                            aria-label="Notifikasi"
+                                        >
+                                            <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0" />
+                                            </svg>
+                                            <span
+                                                v-if="$page.props.auth.unread_notifications_count > 0"
+                                                class="absolute -top-0.5 -right-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-red-600 text-[10px] font-bold text-white shadow"
+                                            >
+                                                {{ $page.props.auth.unread_notifications_count }}
+                                            </span>
+                                        </button>
+                                    </template>
+
+                                    <template #content>
+                                        <div class="p-3 border-b border-gray-100 flex items-center justify-between">
+                                            <span class="text-xs font-bold text-gray-800">Notifikasi Ambang Batas</span>
+                                            <Link
+                                                v-if="$page.props.auth.unread_notifications_count > 0"
+                                                :href="route('notifications.mark_all_read')"
+                                                method="post"
+                                                as="button"
+                                                class="text-[11px] font-medium text-emerald-600 hover:text-emerald-800"
+                                            >
+                                                Tandai Semua Dibaca
+                                            </Link>
+                                        </div>
+                                        <div class="max-h-64 overflow-y-auto divide-y divide-gray-100">
+                                            <div
+                                                v-if="!$page.props.auth.notifications || $page.props.auth.notifications.length === 0"
+                                                class="p-4 text-center text-xs text-gray-500"
+                                            >
+                                                Tidak ada notifikasi baru.
+                                            </div>
+                                            <div
+                                                v-for="notif in $page.props.auth.notifications"
+                                                :key="notif.id"
+                                                class="p-3 text-xs hover:bg-gray-50 flex flex-col gap-1"
+                                                :class="{ 'bg-emerald-50/50': !notif.read_at }"
+                                            >
+                                                <div class="flex items-center justify-between">
+                                                    <span class="font-semibold text-gray-900">{{ notif.data?.title || 'Notifikasi' }}</span>
+                                                    <Link
+                                                        v-if="!notif.read_at"
+                                                        :href="route('notifications.read', notif.id)"
+                                                        method="post"
+                                                        as="button"
+                                                        class="text-[10px] text-emerald-600 hover:underline"
+                                                    >
+                                                        Dibaca
+                                                    </Link>
+                                                </div>
+                                                <p class="text-gray-600 text-[11px] leading-relaxed">{{ notif.data?.message }}</p>
+                                                <span class="text-[10px] text-gray-400">{{ new Date(notif.created_at).toLocaleString('id-ID') }}</span>
+                                            </div>
+                                        </div>
+                                    </template>
+                                </Dropdown>
+                            </div>
+
                             <!-- Settings Dropdown -->
-                            <div class="relative ms-3">
+                            <div class="relative">
                                 <Dropdown align="right" width="48">
                                     <template #trigger>
                                         <span class="inline-flex rounded-md">
@@ -190,6 +263,12 @@ const showingNavigationDropdown = ref(false);
                             :active="route().current('gis.*')"
                         >
                             Peta GIS
+                        </ResponsiveNavLink>
+                        <ResponsiveNavLink
+                            :href="route('pemupukan.index')"
+                            :active="route().current('pemupukan.*')"
+                        >
+                            Pemupukan
                         </ResponsiveNavLink>
                     </div>
 

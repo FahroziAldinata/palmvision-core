@@ -57,6 +57,8 @@ class ProduksiHarian extends Model
         'catatan',
         'sumber',
         'client_uuid',
+        'device_time',
+        'perlu_tinjauan_waktu',
     ];
 
     /**
@@ -64,6 +66,8 @@ class ProduksiHarian extends Model
      */
     protected $casts = [
         'tanggal' => 'date:Y-m-d',
+        'device_time' => 'datetime',
+        'perlu_tinjauan_waktu' => 'boolean',
     ];
 
     /**

@@ -48,4 +48,9 @@ return [
         'url' => env('TILESERV_URL', 'http://tileserv:7800'),
     ],
 
+    'pks' => [
+        'webhook_secret' => env('PKS_WEBHOOK_SECRET', 'palmvision-pks-secret-test-key'),
+        'api_key' => env('PKS_API_KEY', 'palmvision-pks-api-key-test'),
+    ],
+
 ];

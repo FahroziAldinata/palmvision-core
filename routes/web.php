@@ -21,7 +21,9 @@ Route::get('/', function () {
 use App\Http\Controllers\Web\DashboardController;
 use App\Http\Controllers\Web\GisController;
 use App\Http\Controllers\Web\LaporanController;
+use App\Http\Controllers\Web\NotificationWebController;
 use App\Http\Controllers\Web\PemanenController;
+use App\Http\Controllers\Web\PemupukanController;
 use App\Http\Controllers\Web\ProduksiHarianController;
 use App\Http\Controllers\Web\TaksasiController;
 use App\Http\Controllers\Web\ValidasiProduksiController;
@@ -74,6 +76,18 @@ Route::middleware('auth')->group(function () {
         Route::get('/tiles/{z}/{x}/{y}.pbf', [GisController::class, 'tiles'])->name('tiles');
         Route::get('/bloks/{blok}', [GisController::class, 'blockDetail'])->name('blok.detail');
         Route::post('/bloks/{blok}/import', [GisController::class, 'importPoligon'])->name('blok.import');
+    });
+
+    // Phase 5 Modul 4: Pemupukan Minimal Log
+    Route::prefix('pemupukan')->name('pemupukan.')->group(function () {
+        Route::get('/', [PemupukanController::class, 'index'])->name('index');
+        Route::post('/', [PemupukanController::class, 'store'])->name('store');
+    });
+
+    // Phase 5 Modul 2: In-App Notifications
+    Route::prefix('notifications')->name('notifications.')->group(function () {
+        Route::post('/{id}/read', [NotificationWebController::class, 'markAsRead'])->name('read');
+        Route::post('/mark-all-read', [NotificationWebController::class, 'markAllRead'])->name('mark_all_read');
     });
 });
 

@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Domain\Taksasi\Models;
+namespace App\Domain\Pemupukan\Models;
 
 use App\Domain\Organisasi\Models\Blok;
 use App\Models\User;
@@ -14,20 +14,21 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property string $id
  * @property string $blok_id
  * @property int $dicatat_oleh
- * @property CarbonInterface|string $tanggal_taksasi
- * @property int $pokok_disampel
- * @property int $estimasi_janjang
- * @property float $estimasi_bjr
- * @property float $estimasi_total_kg
+ * @property CarbonInterface|string $tanggal_aplikasi
+ * @property string $jenis_pupuk
+ * @property float $dosis_kg_per_pokok
+ * @property int $jumlah_pokok_dipupuk
+ * @property float $total_kg_terpakai
+ * @property string $cara_aplikasi
  * @property string|null $catatan
  * @property-read Blok|null $blok
  * @property-read User|null $pencatat
  */
-class Taksasi extends Model
+class Pemupukan extends Model
 {
     use HasUuids, SoftDeletes;
 
-    protected $table = 'taksasi';
+    protected $table = 'pemupukan';
 
     /**
      * @var list<string>
@@ -35,16 +36,13 @@ class Taksasi extends Model
     protected $fillable = [
         'blok_id',
         'dicatat_oleh',
-        'tanggal_taksasi',
-        'pokok_disampel',
-        'estimasi_janjang',
-        'estimasi_bjr',
-        'estimasi_total_kg',
+        'tanggal_aplikasi',
+        'jenis_pupuk',
+        'dosis_kg_per_pokok',
+        'jumlah_pokok_dipupuk',
+        'total_kg_terpakai',
+        'cara_aplikasi',
         'catatan',
-        'sumber',
-        'client_uuid',
-        'device_time',
-        'perlu_tinjauan_waktu',
     ];
 
     /**
@@ -53,13 +51,10 @@ class Taksasi extends Model
     protected function casts(): array
     {
         return [
-            'tanggal_taksasi' => 'date',
-            'pokok_disampel' => 'integer',
-            'estimasi_janjang' => 'integer',
-            'estimasi_bjr' => 'decimal:2',
-            'estimasi_total_kg' => 'decimal:2',
-            'device_time' => 'datetime',
-            'perlu_tinjauan_waktu' => 'boolean',
+            'tanggal_aplikasi' => 'date',
+            'dosis_kg_per_pokok' => 'decimal:2',
+            'jumlah_pokok_dipupuk' => 'integer',
+            'total_kg_terpakai' => 'decimal:2',
         ];
     }
 

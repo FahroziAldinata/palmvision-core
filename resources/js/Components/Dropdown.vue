@@ -4,7 +4,7 @@ import { computed, onMounted, onUnmounted, ref } from 'vue';
 const props = withDefaults(
     defineProps<{
         align?: 'left' | 'right';
-        width?: '48';
+        width?: '48' | '64' | '80' | '96';
         contentClasses?: string;
     }>(),
     {
@@ -25,8 +25,11 @@ onUnmounted(() => document.removeEventListener('keydown', closeOnEscape));
 
 const widthClass = computed(() => {
     return {
-        48: 'w-48',
-    }[props.width.toString()];
+        '48': 'w-48',
+        '64': 'w-64',
+        '80': 'w-80',
+        '96': 'w-96',
+    }[props.width.toString()] || 'w-48';
 });
 
 const alignmentClasses = computed(() => {

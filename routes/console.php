@@ -19,3 +19,9 @@ Schedule::command('rainfall:fetch')
     ->dailyAt('02:00')
     ->name('daily-rainfall-sync')
     ->withoutOverlapping();
+
+// PRD UC-13: Pengecekan harian ambang batas selisih taksasi (>15%) dan rotasi panen terlewat
+Schedule::command('palmvision:check-thresholds')
+    ->dailyAt('06:00')
+    ->name('daily-threshold-check')
+    ->withoutOverlapping();
